@@ -101,6 +101,19 @@
             </div>
             <input type="range" id="spin-speed" min="0.5" max="2.0" step="0.1" value="1.0" class="slider-input" />
           </div>
+          <!-- Worker Sync Integration -->
+          <div class="setting-row worker-sync-section">
+            <div class="setting-details">
+              <span class="setting-name">Worker Cloud Sync</span>
+              <span id="sync-status" class="sync-badge local-mode">Local Only</span>
+            </div>
+            <div class="sync-input-wrapper">
+              <input type="url" id="worker-url" placeholder="Paste Worker URL..." class="form-input sync-input-field" />
+              <button id="btn-sync-now" class="btn-sync-action" title="Force Sync Now">
+                <i class="fa-solid fa-rotate"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

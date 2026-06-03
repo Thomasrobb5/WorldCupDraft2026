@@ -250,8 +250,9 @@ body {
   flex-direction: column;
   gap: 12px; /* Compacted from 24px */
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
   min-height: 0;
+  padding-right: 4px;
 }
 
 @media (max-width: 1023px) {
@@ -1539,4 +1540,92 @@ input[type="number"] {
 .slider-input::-moz-range-thumb:hover {
   transform: scale(1.2);
   box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
+}
+
+/* Worker Sync Card Styles */
+.worker-sync-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.sync-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.local-mode {
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+}
+
+.syncing-mode {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+  animation: pulseSyncing 1s infinite alternate;
+}
+
+.synced-mode {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+.offline-mode {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+@keyframes pulseSyncing {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.sync-input-wrapper {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.sync-input-field {
+  flex-grow: 1;
+  font-size: 11px !important;
+  height: 30px;
+  padding: 4px 8px !important;
+}
+
+.btn-sync-action {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.btn-sync-action:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.btn-sync-action:hover i {
+  animation: spinIcon 1s linear infinite;
+}
+
+@keyframes spinIcon {
+  100% { transform: rotate(360deg); }
 }

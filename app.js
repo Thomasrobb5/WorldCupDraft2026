@@ -16,7 +16,8 @@ let state = {
   selectedTeam: null, // Selected team object
   isMuted: false,
   spinDuration: 6.0, // default spin duration in seconds
-  spinSpeedFactor: 1.0 // default speed multiplier
+  spinSpeedFactor: 1.0, // default speed multiplier
+  workerUrl: '' // Cloudflare Worker Sync URL
 };
 
 // Web Audio API Synthesizer Fallback (for instant sound cues)
@@ -394,6 +395,93 @@ function getRemainingTeams() {
   return defaultTeams.filter(t => !draftedTeamNames.includes(t.name));
 }
 
+// Cloudflare Worker Sync Functions
+async function pushToCloud() {
+  const urlInput = document.getElementById('worker-url');
+  const url = urlInput ? urlInput.value.trim() : (state.workerUrl || '');
+  if (!url) {
+    updateSyncStatusUI('local');
+    return;
+  }
+  
+  updateSyncStatusUI('syncing');
+  try {
+    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+    const res = await fetch(`${cleanUrl}/api/draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    if (res.ok) {
+      updateSyncStatusUI('synced');
+    } else {
+      updateSyncStatusUI('offline');
+    }
+  } catch (err) {
+    console.error("Cloud push failed:", err);
+    updateSyncStatusUI('offline');
+  }
+}
+
+async function fetchFromCloud(forceLoad = false) {
+  const urlInput = document.getElementById('worker-url');
+  const url = urlInput ? urlInput.value.trim() : (state.workerUrl || '');
+  if (!url) {
+    updateSyncStatusUI('local');
+    return;
+  }
+  
+  updateSyncStatusUI('syncing');
+  try {
+    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+    const res = await fetch(`${cleanUrl}/api/draft`);
+    if (res.ok) {
+      const cloudState = await res.json();
+      // If forceLoad is true or cloud has more draft results, apply cloud state
+      if (forceLoad || (cloudState.draftResults && cloudState.draftResults.length > state.draftResults.length) || !state.draftResults || state.draftResults.length === 0) {
+        state = {
+          players: cloudState.players || state.players,
+          draftResults: cloudState.draftResults || [],
+          gameState: cloudState.gameState || 'SELECTING_PLAYER',
+          selectedPlayer: cloudState.selectedPlayer || null,
+          selectedTeam: cloudState.selectedTeam || null,
+          isMuted: cloudState.isMuted || false,
+          spinDuration: cloudState.spinDuration || state.spinDuration || 6.0,
+          spinSpeedFactor: cloudState.spinSpeedFactor || state.spinSpeedFactor || 1.0,
+          workerUrl: url
+        };
+        saveState(false); // save locally without triggering another push to prevent loop
+        initApp();
+      }
+      updateSyncStatusUI('synced');
+    } else {
+      updateSyncStatusUI('offline');
+    }
+  } catch (err) {
+    console.error("Cloud fetch failed:", err);
+    updateSyncStatusUI('offline');
+  }
+}
+
+function updateSyncStatusUI(status) {
+  const badge = document.getElementById('sync-status');
+  if (!badge) return;
+  
+  if (status === 'local') {
+    badge.className = 'sync-badge local-mode';
+    badge.innerText = 'Local Only';
+  } else if (status === 'syncing') {
+    badge.className = 'sync-badge syncing-mode';
+    badge.innerText = 'Syncing...';
+  } else if (status === 'synced') {
+    badge.className = 'sync-badge synced-mode';
+    badge.innerText = 'Synced';
+  } else if (status === 'offline') {
+    badge.className = 'sync-badge offline-mode';
+    badge.innerText = 'Offline';
+  }
+}
+
 // Initial Sync & LocalStorage handling
 function loadState() {
   const saved = localStorage.getItem('wc_draft_state');
@@ -410,23 +498,34 @@ function loadState() {
       if (!state.gameState) state.gameState = 'SELECTING_PLAYER';
       if (state.spinDuration === undefined) state.spinDuration = 6.0;
       if (state.spinSpeedFactor === undefined) state.spinSpeedFactor = 1.0;
+      if (state.workerUrl === undefined) state.workerUrl = '';
     } catch (e) {
       console.error("Failed to parse local storage state. Reverting to default.", e);
       state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
       state.draftResults = [];
       state.gameState = 'SELECTING_PLAYER';
+      state.workerUrl = '';
     }
   } else {
     state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
     state.draftResults = [];
     state.gameState = 'SELECTING_PLAYER';
+    state.workerUrl = '';
   }
   
   updateMuteStateUI();
+  
+  // Try to sync with Cloud Worker on startup
+  setTimeout(() => {
+    fetchFromCloud();
+  }, 100);
 }
 
-function saveState() {
+function saveState(pushCloud = true) {
   localStorage.setItem('wc_draft_state', JSON.stringify(state));
+  if (pushCloud) {
+    pushToCloud();
+  }
 }
 
 function updateMuteStateUI() {
@@ -954,6 +1053,25 @@ window.addEventListener('DOMContentLoaded', () => {
       valSpeed.innerText = state.spinSpeedFactor.toFixed(1) + 'x';
       saveState();
     });
+  }
+
+  // Bind Worker Sync controls
+  const inputWorkerUrl = document.getElementById('worker-url');
+  const btnSyncNow = document.getElementById('btn-sync-now');
+
+  if (inputWorkerUrl) {
+    inputWorkerUrl.value = state.workerUrl || '';
+    
+    inputWorkerUrl.addEventListener('change', (e) => {
+      state.workerUrl = e.target.value.trim();
+      saveState(true); // Trigger a push sync to verify connection
+    });
+
+    if (btnSyncNow) {
+      btnSyncNow.addEventListener('click', () => {
+        fetchFromCloud(true); // Force pull sync
+      });
+    }
   }
   
   // Run Main Initializer

@@ -2,10 +2,6 @@ name = "worldcup-draft-2026"
 main = "worker.js"
 compatibility_date = "2026-06-03"
 
-# Fallback KV Namespace setup. If the user wants persistence,
-# they can bind their own KV namespace by running:
-# npx wrangler kv:namespace create DRAFT_KV
-# and then copy/paste the returned id into the line below:
-# [[kv_namespaces]]
-# binding = "DRAFT_KV"
-# id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+[[kv_namespaces]]
+binding = "DRAFT_KV"
+id = "c221fce41b6b432da18dcf97fd4a0661"

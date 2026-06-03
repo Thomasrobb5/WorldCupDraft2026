@@ -430,10 +430,18 @@ async function fetchFromCloud(forceLoad = false) {
     const res = await fetch(`${url}/api/draft`);
     if (res.ok) {
       const cloudState = await res.json();
+      
+      // If the cloud state is completely uninitialized, push our local state to it
+      if (!cloudState.players || cloudState.players.length === 0) {
+        pushToCloud();
+        updateSyncStatusUI('synced');
+        return;
+      }
+
       // If forceLoad is true or cloud has more draft results, apply cloud state
       if (forceLoad || (cloudState.draftResults && cloudState.draftResults.length > state.draftResults.length) || !state.draftResults || state.draftResults.length === 0) {
         state = {
-          players: cloudState.players || state.players,
+          players: (cloudState.players && cloudState.players.length > 0) ? cloudState.players : state.players,
           draftResults: cloudState.draftResults || [],
           gameState: cloudState.gameState || 'SELECTING_PLAYER',
           selectedPlayer: cloudState.selectedPlayer || null,

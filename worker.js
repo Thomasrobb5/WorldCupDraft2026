@@ -10,7 +10,16 @@
 
 // Global in-memory state fallback (resets when worker restarts)
 let memoryState = {
-  players: [],
+  players: [
+    { name: "Ross", maxDrafts: 6 },
+    { name: "Brad", maxDrafts: 6 },
+    { name: "Tav", maxDrafts: 6 },
+    { name: "Saunders", maxDrafts: 6 },
+    { name: "Matt", maxDrafts: 6 },
+    { name: "Albury", maxDrafts: 6 },
+    { name: "Mook", maxDrafts: 6 },
+    { name: "Boob", maxDrafts: 6 }
+  ],
   draftResults: [],
   gameState: 'SELECTING_PLAYER',
   selectedPlayer: null,

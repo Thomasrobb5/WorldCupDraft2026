@@ -132,7 +132,7 @@ const triggerAudio = {
     if (window.audioController && typeof window.audioController.playTick === 'function') {
       // Map velocity (typically 0.001 to 0.58) to rate factor (0.4 to 2.2)
       const rate = Math.max(0.4, Math.min(2.2, velocity * 4.0));
-      window.audioController.playTick(0.4, rate);
+      window.audioController.playTick(0.12, rate);
     } else {
       audioSynthFallback.playTick();
     }

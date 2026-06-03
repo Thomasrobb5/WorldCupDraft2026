@@ -516,9 +516,9 @@ function loadState() {
   
   updateMuteStateUI();
   
-  // Try to sync with Cloud Worker on startup
+  // Try to sync with Cloud Worker on startup (force pull cloud state)
   setTimeout(() => {
-    fetchFromCloud();
+    fetchFromCloud(true);
   }, 100);
 }
 

@@ -395,10 +395,10 @@ function getSummaryHTML() {
       const isComplete = draftedCount > 0 && draftedCount === totalMax;
       
       // Update progress banner
-      progressContainer.innerHTML = `
-        <i class="fa-solid \${isComplete ? 'fa-circle-check' : 'fa-circle-notch \${draftedCount > 0 ? 'spinner' : ''}'}"></i>
+      progressContainer.innerHTML = \`
+        <i class="fa-solid \${isComplete ? 'fa-circle-check' : 'fa-circle-notch ' + (draftedCount > 0 ? 'spinner' : '')}"></i>
         <span>Draft Progress: \${draftedCount} / \${totalMax} \${isComplete ? '(Complete!)' : ''}</span>
-      `;
+      \`;
       if (isComplete) {
         progressContainer.classList.add('completed-badge');
       } else {

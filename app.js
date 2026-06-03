@@ -7,6 +7,8 @@ const getDefaultMaxDrafts = () => {
   return Math.ceil(tCount / pCount);
 };
 
+const HARDCODED_WORKER_URL = 'https://worldcup-draft-2026.thomasrobb5.workers.dev';
+
 // App State
 let state = {
   players: [], // Array of { name: string, maxDrafts: number }
@@ -17,7 +19,7 @@ let state = {
   isMuted: false,
   spinDuration: 6.0, // default spin duration in seconds
   spinSpeedFactor: 1.0, // default speed multiplier
-  workerUrl: '' // Cloudflare Worker Sync URL
+  workerUrl: HARDCODED_WORKER_URL // Hardcoded Cloudflare Worker Sync URL
 };
 
 // Web Audio API Synthesizer Fallback (for instant sound cues)
@@ -397,19 +399,16 @@ function getRemainingTeams() {
 
 // Cloudflare Worker Sync Functions
 async function pushToCloud() {
-  const urlInput = document.getElementById('worker-url');
-  const url = urlInput ? urlInput.value.trim() : (state.workerUrl || '');
-  if (!url) {
-    updateSyncStatusUI('local');
-    return;
-  }
+  const url = HARDCODED_WORKER_URL;
   
   updateSyncStatusUI('syncing');
   try {
-    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-    const res = await fetch(`${cleanUrl}/api/draft`, {
+    const res = await fetch(`${url}/api/draft`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Draft-Password': 'Tavoo'
+      },
       body: JSON.stringify(state)
     });
     if (res.ok) {
@@ -424,17 +423,11 @@ async function pushToCloud() {
 }
 
 async function fetchFromCloud(forceLoad = false) {
-  const urlInput = document.getElementById('worker-url');
-  const url = urlInput ? urlInput.value.trim() : (state.workerUrl || '');
-  if (!url) {
-    updateSyncStatusUI('local');
-    return;
-  }
+  const url = HARDCODED_WORKER_URL;
   
   updateSyncStatusUI('syncing');
   try {
-    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-    const res = await fetch(`${cleanUrl}/api/draft`);
+    const res = await fetch(`${url}/api/draft`);
     if (res.ok) {
       const cloudState = await res.json();
       // If forceLoad is true or cloud has more draft results, apply cloud state
@@ -498,19 +491,19 @@ function loadState() {
       if (!state.gameState) state.gameState = 'SELECTING_PLAYER';
       if (state.spinDuration === undefined) state.spinDuration = 6.0;
       if (state.spinSpeedFactor === undefined) state.spinSpeedFactor = 1.0;
-      if (state.workerUrl === undefined) state.workerUrl = '';
+      state.workerUrl = HARDCODED_WORKER_URL; // Enforce hardcoded endpoint
     } catch (e) {
       console.error("Failed to parse local storage state. Reverting to default.", e);
       state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
       state.draftResults = [];
       state.gameState = 'SELECTING_PLAYER';
-      state.workerUrl = '';
+      state.workerUrl = HARDCODED_WORKER_URL; // Enforce hardcoded endpoint
     }
   } else {
     state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
     state.draftResults = [];
     state.gameState = 'SELECTING_PLAYER';
-    state.workerUrl = '';
+    state.workerUrl = HARDCODED_WORKER_URL; // Enforce hardcoded endpoint
   }
   
   updateMuteStateUI();
@@ -912,7 +905,42 @@ function createSummaryConfetti() {
 
 // Initialize Logic
 window.addEventListener('DOMContentLoaded', () => {
-  loadState();
+  const isUnlocked = sessionStorage.getItem('draft_unlocked') === 'true';
+  const lockScreen = document.getElementById('lock-screen');
+  
+  if (isUnlocked) {
+    if (lockScreen) lockScreen.classList.add('fade-out');
+    loadState();
+  } else {
+    if (lockScreen) lockScreen.classList.remove('fade-out');
+    
+    const lockForm = document.getElementById('lock-form');
+    const lockInput = document.getElementById('lock-password');
+    const lockError = document.getElementById('lock-error');
+    
+    if (lockForm) {
+      lockForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const pwd = lockInput ? lockInput.value.trim() : '';
+        if (pwd === 'Tavoo') {
+          sessionStorage.setItem('draft_unlocked', 'true');
+          if (lockScreen) lockScreen.classList.add('fade-out');
+          loadState();
+        } else {
+          if (lockError) {
+            lockError.classList.remove('hidden-input');
+            lockError.style.animation = 'none';
+            lockError.offsetHeight; // trigger reflow
+            lockError.style.animation = '';
+          }
+          if (lockInput) {
+            lockInput.value = '';
+            lockInput.focus();
+          }
+        }
+      });
+    }
+  }
   
   // Audio Context Autoplay Resume Listener
   const initAudioOnGesture = () => {
@@ -1151,22 +1179,11 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Bind Worker Sync controls
-  const inputWorkerUrl = document.getElementById('worker-url');
   const btnSyncNow = document.getElementById('btn-sync-now');
-
-  if (inputWorkerUrl) {
-    inputWorkerUrl.value = state.workerUrl || '';
-    
-    inputWorkerUrl.addEventListener('change', (e) => {
-      state.workerUrl = e.target.value.trim();
-      saveState(true); // Trigger a push sync to verify connection
+  if (btnSyncNow) {
+    btnSyncNow.addEventListener('click', () => {
+      fetchFromCloud(true); // Force pull sync
     });
-
-    if (btnSyncNow) {
-      btnSyncNow.addEventListener('click', () => {
-        fetchFromCloud(true); // Force pull sync
-      });
-    }
   }
 
   // Bind Summary Modal controls

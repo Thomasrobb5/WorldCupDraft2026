@@ -1794,3 +1794,120 @@ input[type="number"] {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 16px;
 }
+
+/* Premium Lock Screen Overlay */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #021a0d 0%, #05070a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.lock-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lock-card {
+  background: var(--color-charcoal-glass);
+  border: 2px solid var(--color-gold);
+  border-radius: 20px;
+  padding: 40px 32px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.2);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: center;
+  animation: lockCardEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes lockCardEntrance {
+  0% { transform: translateY(30px) scale(0.95); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.lock-icon {
+  font-size: 48px;
+  color: var(--color-gold);
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
+  margin-bottom: 8px;
+  animation: pulseGold 2.5s infinite alternate;
+}
+
+.lock-title {
+  font-family: var(--font-sports);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 0%, var(--color-gold) 70%, var(--color-gold-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.lock-subtitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lock-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 15px;
+  border-radius: 10px;
+  text-align: center;
+  letter-spacing: 3px;
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+.lock-input::placeholder {
+  letter-spacing: 0px;
+  font-size: 13px;
+}
+
+.btn-unlock {
+  width: 100%;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lock-error {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  animation: shakeError 0.4s ease;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}

@@ -42,6 +42,14 @@ export default {
     // 1. POST /api/draft - Save draft state
     if (path === '/api/draft' && method === 'POST') {
       try {
+        const password = request.headers.get('X-Draft-Password');
+        if (password !== 'Tavoo') {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+            status: 401
+          });
+        }
+        
         const body = await request.json();
         
         // Basic validation
@@ -343,6 +351,67 @@ function getSummaryHTML() {
     @keyframes spin {
       100% { transform: rotate(360deg); }
     }
+
+    /* Completed Draft Visuals */
+    .player-card-complete {
+      border: 2px solid var(--color-gold) !important;
+      box-shadow: 0 10px 30px var(--color-gold-glow) !important;
+    }
+
+    .championship-banner {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(13, 61, 34, 0.5) 100%);
+      border: 2px solid var(--color-gold);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px var(--color-gold-glow);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      animation: bannerEntrance 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    
+    @keyframes bannerEntrance {
+      0% { transform: translateY(-15px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    
+    .trophy-championship {
+      font-size: 40px;
+      color: var(--color-gold);
+      filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+      animation: pulseGold 2.5s infinite alternate;
+    }
+    
+    .championship-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--color-gold-light) 0%, var(--color-gold) 60%, #ffffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+    
+    .championship-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    @keyframes pulseGold {
+      0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4)); }
+      100% { transform: scale(1.06); filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)); }
+    }
   </style>
 </head>
 <body>
@@ -410,14 +479,25 @@ function getSummaryHTML() {
         return;
       }
 
-      let html = '<div class="players-grid">';
+      let html = '';
+      if (isComplete) {
+        html += \`
+          <div class="championship-banner">
+            <i class="fa-solid fa-trophy trophy-championship"></i>
+            <h2 class="championship-title">Draft Completed!</h2>
+            <p class="championship-subtitle">All 48 World Cup teams have been assigned. Good luck to all players!</p>
+          </div>
+        \`;
+      }
+
+      html += '<div class="players-grid">';
       
       state.players.forEach(player => {
         const playerResults = state.draftResults.filter(r => r.player === player.name);
         const quotaMet = playerResults.length >= player.maxDrafts;
         
         html += \`
-          <div class="player-card">
+          <div class="player-card \${quotaMet ? 'player-card-complete' : ''}">
             <div class="player-header">
               <h2 class="player-name">\${player.name}</h2>
               <span class="player-quota">\${playerResults.length} / \${player.maxDrafts}</span>

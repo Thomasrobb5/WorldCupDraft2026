@@ -14,6 +14,24 @@
 </head>
 <body class="app-body">
 
+  <!-- Premium Lock Screen Overlay -->
+  <div id="lock-screen" class="lock-screen">
+    <div class="lock-card">
+      <div class="lock-header">
+        <i class="fa-solid fa-lock lock-icon"></i>
+        <h2 class="lock-title">World Cup Draft 2026</h2>
+        <p class="lock-subtitle">Authorized Access Only</p>
+      </div>
+      <form id="lock-form" class="lock-form">
+        <input type="password" id="lock-password" placeholder="Enter password to unlock..." class="form-input lock-input" required autocomplete="current-password" />
+        <button type="submit" class="btn-primary btn-unlock">
+          Unlock Draft <i class="fa-solid fa-key"></i>
+        </button>
+      </form>
+      <p id="lock-error" class="lock-error hidden-input">Incorrect password. Access denied.</p>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="header-container">
     <div class="header-logo-container">
@@ -110,12 +128,11 @@
           <div class="setting-row worker-sync-section">
             <div class="setting-details">
               <span class="setting-name">Worker Cloud Sync</span>
-              <span id="sync-status" class="sync-badge local-mode">Local Only</span>
+              <span id="sync-status" class="sync-badge local-mode">Checking...</span>
             </div>
-            <div class="sync-input-wrapper">
-              <input type="url" id="worker-url" placeholder="Paste Worker URL..." class="form-input sync-input-field" />
-              <button id="btn-sync-now" class="btn-sync-action" title="Force Sync Now">
-                <i class="fa-solid fa-rotate"></i>
+            <div class="sync-status-controls">
+              <button id="btn-sync-now" class="btn-secondary btn-sync-now-large" title="Force Sync Now" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; padding: 8px 12px;">
+                <i class="fa-solid fa-rotate"></i> Force Sync
               </button>
             </div>
           </div>

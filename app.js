@@ -1190,7 +1190,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnSyncNow = document.getElementById('btn-sync-now');
   if (btnSyncNow) {
     btnSyncNow.addEventListener('click', () => {
-      fetchFromCloud(true); // Force pull sync
+      pushToCloud(); // Push local state to cloud database
     });
   }
 

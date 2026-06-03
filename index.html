@@ -32,6 +32,10 @@
         <i id="mute-icon" class="fa-solid fa-volume-high mute-icon-gold"></i>
         <span>Mute Sound</span>
       </button>
+      <button id="btn-summary-trigger" class="btn-secondary btn-summary">
+        <i class="fa-solid fa-square-poll-horizontal btn-icon-gold"></i>
+        <span>View Summary</span>
+      </button>
       <button id="btn-reset" class="btn-danger btn-reset">
         <i class="fa-solid fa-arrow-rotate-left"></i>
         <span>Reset Draft</span>
@@ -46,6 +50,7 @@
       </button>
       <input type="file" id="btn-import" accept=".json" class="hidden-input" />
     </div>
+
   </header>
 
   <!-- Main Content Grid -->
@@ -270,6 +275,36 @@
         Claim Draft Pick <i class="fa-solid fa-check"></i>
       </button>
       
+    </div>
+  </div>
+
+  <!-- Premium Summary Modal -->
+  <div id="summary-modal" class="reveal-modal opacity-0 pointer-events-none">
+    <div id="summary-particles" class="modal-particles"></div>
+    <div class="summary-modal-container scale-50" id="summary-modal-container">
+      <div class="summary-card">
+        <header class="summary-header">
+          <i class="fa-solid fa-trophy summary-trophy-icon"></i>
+          <h2 class="summary-title">DRAFT SUMMARY BOARD</h2>
+          <p class="summary-subtitle">World Cup 2026 Assignments</p>
+        </header>
+        
+        <div id="summary-players-grid" class="summary-players-grid scrollable-area">
+          <!-- Dynamically populated with player cards showing their teams -->
+        </div>
+        
+        <div class="summary-actions">
+          <button id="btn-summary-export" class="btn-secondary">
+            <i class="fa-solid fa-file-export btn-icon-gold"></i> Export Log
+          </button>
+          <button id="btn-summary-reset" class="btn-danger">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Reset Draft
+          </button>
+          <button id="btn-summary-close" class="btn-primary">
+            Close Summary <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

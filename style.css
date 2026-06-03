@@ -518,6 +518,7 @@ input[type="number"] {
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
+  max-height: 200px; /* Limit history list height to prevent layout overflow on desktop */
 }
 
 .empty-placeholder {
@@ -1628,4 +1629,168 @@ input[type="number"] {
 
 @keyframes spinIcon {
   100% { transform: rotate(360deg); }
+}
+
+/* Summary Modal and Screen Styles */
+.summary-modal-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  width: 95%;
+  max-width: 950px;
+  z-index: 3;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 88vh;
+}
+
+.summary-modal-container.scale-50 {
+  transform: scale(0.5);
+  animation: none;
+}
+
+.summary-modal-container.scale-100 {
+  animation: futReveal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.summary-card {
+  width: 100%;
+  background: var(--color-charcoal-glass);
+  border: 2px solid var(--color-gold);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.15);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 80vh;
+}
+
+.summary-header {
+  text-align: center;
+  border-bottom: 1.5px solid rgba(212, 175, 55, 0.3);
+  padding-bottom: 14px;
+}
+
+.summary-trophy-icon {
+  font-size: 36px;
+  color: var(--color-gold);
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
+  margin-bottom: 6px;
+  animation: pulseGold 2s infinite alternate;
+}
+
+.summary-title {
+  font-family: var(--font-sports);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 0%, var(--color-gold) 60%, var(--color-gold-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.summary-subtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+}
+
+.summary-players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  flex-grow: 1;
+  padding-right: 6px;
+  min-height: 100px;
+}
+
+.summary-player-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.summary-player-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.summary-player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.summary-player-name {
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.summary-player-quota {
+  font-family: var(--font-sports);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+.summary-teams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-team-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.summary-team-flag {
+  width: 24px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-team-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 16px;
 }

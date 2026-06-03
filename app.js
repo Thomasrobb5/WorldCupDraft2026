@@ -824,6 +824,92 @@ function createConfetti() {
   }
 }
 
+function showSummaryModal() {
+  const modal = document.getElementById('summary-modal');
+  const cardContainer = document.getElementById('summary-modal-container');
+  const grid = document.getElementById('summary-players-grid');
+  
+  if (!modal || !cardContainer || !grid) return;
+  
+  grid.innerHTML = '';
+  
+  state.players.forEach(player => {
+    const playerResults = state.draftResults.filter(r => r.player === player.name);
+    const card = document.createElement('div');
+    card.className = 'summary-player-card';
+    
+    let teamsHtml = '';
+    if (playerResults.length === 0) {
+      teamsHtml = '<div class="no-teams">No teams drafted yet</div>';
+    } else {
+      playerResults.forEach(res => {
+        teamsHtml += `
+          <div class="summary-team-item">
+            <img src="https://flagcdn.com/w40/${res.team.code}.png" class="summary-team-flag" alt="${res.team.name}" />
+            <span class="summary-team-name">${res.team.name}</span>
+          </div>
+        `;
+      });
+    }
+    
+    card.innerHTML = `
+      <div class="summary-player-header">
+        <h3 class="summary-player-name">${player.name}</h3>
+        <span class="summary-player-quota">${playerResults.length}/${player.maxDrafts}</span>
+      </div>
+      <div class="summary-teams-list">
+        ${teamsHtml}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+  cardContainer.classList.remove('scale-50');
+  cardContainer.classList.add('scale-100');
+  
+  const draftedCount = state.draftResults.length;
+  const totalMax = state.players.reduce((sum, p) => sum + p.maxDrafts, 0);
+  if (draftedCount > 0 && draftedCount === totalMax) {
+    triggerAudio.playCheer();
+    createSummaryConfetti();
+  }
+}
+
+function closeSummaryModal() {
+  const modal = document.getElementById('summary-modal');
+  const cardContainer = document.getElementById('summary-modal-container');
+  if (!modal || !cardContainer) return;
+  modal.classList.add('opacity-0', 'pointer-events-none');
+  cardContainer.classList.remove('scale-100');
+  cardContainer.classList.add('scale-50');
+}
+
+function createSummaryConfetti() {
+  const container = document.getElementById('summary-particles');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  const colors = ['#d4af37', '#e5c060', '#3b82f6', '#10b981', '#ef4444', '#ec4899'];
+  for (let i = 0; i < 70; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'absolute rounded-full pointer-events-none opacity-80 confetti-piece';
+    
+    const size = Math.random() * 8 + 4;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.top = `-20px`;
+    
+    const delay = Math.random() * 1.8;
+    const duration = Math.random() * 2.5 + 2.0;
+    particle.style.animation = `confettiFall ${duration}s linear ${delay}s infinite`;
+    
+    container.appendChild(particle);
+  }
+}
+
 // Initialize Logic
 window.addEventListener('DOMContentLoaded', () => {
   loadState();
@@ -1022,6 +1108,15 @@ window.addEventListener('DOMContentLoaded', () => {
     
     saveState();
     initApp();
+
+    // Auto-show summary board when the last team is claimed
+    const draftedCount = state.draftResults.length;
+    const totalMax = state.players.reduce((sum, p) => sum + p.maxDrafts, 0);
+    if (draftedCount > 0 && draftedCount === totalMax) {
+      setTimeout(() => {
+        showSummaryModal();
+      }, 800);
+    }
   });
   
   // Search Filter Grid typing
@@ -1072,6 +1167,36 @@ window.addEventListener('DOMContentLoaded', () => {
         fetchFromCloud(true); // Force pull sync
       });
     }
+  }
+
+  // Bind Summary Modal controls
+  const btnSummaryTrigger = document.getElementById('btn-summary-trigger');
+  const btnSummaryClose = document.getElementById('btn-summary-close');
+  const btnSummaryExport = document.getElementById('btn-summary-export');
+  const btnSummaryReset = document.getElementById('btn-summary-reset');
+
+  if (btnSummaryTrigger) {
+    btnSummaryTrigger.addEventListener('click', () => {
+      showSummaryModal();
+    });
+  }
+
+  if (btnSummaryClose) {
+    btnSummaryClose.addEventListener('click', () => {
+      closeSummaryModal();
+    });
+  }
+
+  if (btnSummaryExport) {
+    btnSummaryExport.addEventListener('click', () => {
+      document.getElementById('btn-export').click();
+    });
+  }
+
+  if (btnSummaryReset) {
+    btnSummaryReset.addEventListener('click', () => {
+      document.getElementById('btn-reset').click();
+    });
   }
   
   // Run Main Initializer

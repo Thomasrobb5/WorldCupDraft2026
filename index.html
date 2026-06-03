@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 World Cup Draft Wheel</title>
+  <!-- Google Fonts for premium sports styling -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for clean iconography -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="app-body">
+
+  <!-- Header -->
+  <header class="header-container">
+    <div class="header-logo-container">
+      <i class="fa-solid fa-trophy header-icon"></i>
+      <div>
+        <h1 class="header-title">
+          World Cup 2026 Draft
+        </h1>
+        <p class="header-subtitle">Decide the Champions of the World</p>
+      </div>
+    </div>
+    
+    <!-- Header Control Buttons -->
+    <div class="header-controls">
+      <button id="btn-mute" class="btn-secondary btn-mute">
+        <i id="mute-icon" class="fa-solid fa-volume-high mute-icon-gold"></i>
+        <span>Mute Sound</span>
+      </button>
+      <button id="btn-reset" class="btn-danger btn-reset">
+        <i class="fa-solid fa-arrow-rotate-left"></i>
+        <span>Reset Draft</span>
+      </button>
+      <button id="btn-export" class="btn-secondary btn-export">
+        <i class="fa-solid fa-file-export btn-icon-gold"></i>
+        <span>Export Log</span>
+      </button>
+      <button id="btn-import-trigger" class="btn-secondary btn-import-trigger">
+        <i class="fa-solid fa-file-import btn-icon-gold"></i>
+        <span>Import Log</span>
+      </button>
+      <input type="file" id="btn-import" accept=".json" class="hidden-input" />
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <main class="main-layout">
+    
+    <!-- Sidebar: Players Grid, Draft Progress, and Logs -->
+    <section class="sidebar-container">
+      
+      <!-- Players Grid / Draft Limits -->
+      <div class="panel-card players-card">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-users"></i> Players & Quotas
+          </h2>
+          <span id="global-drafts-tracker" class="drafts-tracker">
+            Drafted: 0/48
+          </span>
+        </div>
+        
+        <!-- Players Dynamic List -->
+        <div id="players-list" class="players-list scrollable-area">
+          <!-- Dynamically filled with player rows including adjustment inputs -->
+        </div>
+
+        <!-- Add Player Form -->
+        <form id="add-player-form" class="add-player-form">
+          <input type="text" id="new-player-name" placeholder="Add player..." required class="form-input new-player-input" />
+          <button type="submit" class="btn-primary btn-add-player">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Spin Settings Card -->
+      <div class="panel-card settings-card">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-sliders"></i> Spin Settings
+          </h2>
+        </div>
+        <div class="settings-list">
+          <div class="setting-row">
+            <div class="setting-details">
+              <span class="setting-name">Spin Duration</span>
+              <span id="duration-val" class="setting-value">6.0s</span>
+            </div>
+            <input type="range" id="spin-duration" min="2" max="15" step="0.5" value="6.0" class="slider-input" />
+          </div>
+          <div class="setting-row">
+            <div class="setting-details">
+              <span class="setting-name">Spin Speed Factor</span>
+              <span id="speed-val" class="setting-value">1.0x</span>
+            </div>
+            <input type="range" id="spin-speed" min="0.5" max="2.0" step="0.1" value="1.0" class="slider-input" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Draft Results Log -->
+      <div class="panel-card history-card">
+        <div class="panel-header-simple">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-clock-rotate-left"></i> Draft History
+          </h2>
+        </div>
+        
+        <!-- Results Log List -->
+        <div id="draft-results" class="history-list scrollable-area">
+          <!-- Dynamically populated with draft cards containing country flag and time -->
+          <div class="empty-placeholder">
+            No teams drafted yet. Let's spin!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Draft Stage -->
+    <section class="draft-stage">
+      
+      <!-- Stage Indicator Banner -->
+      <div id="draft-status-banner" class="status-banner">
+        <span class="status-banner-subtitle">Current Phase</span>
+        <h3 id="draft-status-text" class="status-banner-title">
+          STEP 1: SPIN THE PLAYER WHEEL
+        </h3>
+      </div>
+
+      <!-- Canvas Wheels Display -->
+      <div class="wheels-display-container">
+        <!-- Watermark / Decorative background grid lines -->
+        <div class="bg-watermark"></div>
+        
+        <!-- Player Wheel Column -->
+        <div id="player-wheel-container" class="wheel-panel">
+          <h4 class="wheel-title player-color">1. Player Selection</h4>
+          <div class="canvas-wrapper">
+            <canvas id="player-wheel" class="wheel-canvas"></canvas>
+          </div>
+          <button id="btn-spin-player" class="btn-spin btn-spin-player">
+            Spin Player
+          </button>
+          <div id="player-selected-display" class="selection-display">
+            No player selected
+          </div>
+        </div>
+
+        <!-- Team Wheel Column -->
+        <div id="team-wheel-container" class="wheel-panel disabled-state">
+          <h4 class="wheel-title team-color">2. Team Assignment</h4>
+          <div class="canvas-wrapper">
+            <canvas id="team-wheel" class="wheel-canvas"></canvas>
+          </div>
+          <button id="btn-spin-team" class="btn-spin btn-spin-team">
+            Spin Team
+          </button>
+          <div id="team-selected-display" class="selection-display">
+            Waiting for player...
+          </div>
+        </div>
+      </div>
+      
+    </section>
+
+    <!-- Remaining Teams List Grid -->
+    <section class="panel-card remaining-teams-card">
+      <div class="panel-header-column">
+        <h2 class="panel-title">
+          <i class="fa-solid fa-circle-info"></i> Remaining Teams
+        </h2>
+        
+        <!-- Search filter input -->
+        <div class="search-input-wrapper">
+          <span class="search-icon-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input type="text" id="search-teams" placeholder="Search teams (e.g. Brazil)..." class="form-input search-input" />
+        </div>
+      </div>
+
+      <!-- Teams Cards Grid -->
+      <div id="teams-grid" class="teams-grid scrollable-area">
+        <!-- Dynamically rendered team flags/names. Grayed out if already drafted -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Live Scrolling Ticker Tape Footer -->
+  <footer class="ticker-footer">
+    <div id="ticker-wrap" class="ticker-wrap">
+      <div id="ticker-content" class="ticker-content animate-ticker">
+        WELCOME TO THE 2026 WORLD CUP DRAFT! • SPIN THE PLAYER WHEEL TO START THE DRAFT • 48 TEAMS, 8 PLAYERS, ONE ULTIMATE WINNER • DRAFT LIVE!
+      </div>
+    </div>
+  </footer>
+
+  <!-- FUT-style Reveal Modal overlay -->
+  <div id="reveal-modal" class="reveal-modal opacity-0 pointer-events-none">
+    
+    <!-- Confetti Canvas or particles container -->
+    <div id="modal-particles" class="modal-particles"></div>
+    
+    <!-- FUT Card Container -->
+    <div class="reveal-card-container scale-50" id="reveal-card-container">
+      
+      <!-- FUT Shield Card Design -->
+      <div class="fut-card">
+        
+        <!-- Card Pattern Overlays -->
+        <div class="card-pattern-dots"></div>
+        <div class="card-pattern-shine"></div>
+        
+        <!-- Top Banner: World Cup 2026 Logo placeholder -->
+        <div class="card-top-banner">
+          <i class="fa-solid fa-earth-americas card-world-icon"></i>
+          <span class="card-badge">DRAFT PICK</span>
+        </div>
+
+        <!-- Center Details: Large Flag & Team -->
+        <div class="card-center-details">
+          <!-- Flag Ring -->
+          <div class="card-flag-frame">
+            <img id="reveal-team-flag" src="" alt="Country Flag" class="card-flag-image" />
+            <div class="card-flag-overlay"></div>
+          </div>
+          
+          <!-- Team Name -->
+          <div class="card-team-name-wrapper">
+            <h2 id="reveal-team-name" class="card-team-name">
+              GERMANY
+            </h2>
+            <span id="reveal-team-group" class="card-group-badge">
+              Group Stage
+            </span>
+          </div>
+        </div>
+
+        <!-- Bottom Holder: Player Name Badge -->
+        <div class="card-bottom-holder">
+          <p class="card-player-label">DRAFTED BY</p>
+          <h3 id="reveal-player-name" class="card-player-name">
+            ROSS
+          </h3>
+        </div>
+      </div>
+      
+      <!-- Big Claim Button -->
+      <button id="btn-reveal-claim" class="btn-primary btn-claim">
+        Claim Draft Pick <i class="fa-solid fa-check"></i>
+      </button>
+      
+    </div>
+  </div>
+
+  <!-- Loading external JS scripts -->
+  <script src="teams.js"></script>
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

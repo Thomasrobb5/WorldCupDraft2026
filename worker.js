@@ -7,7 +7,6 @@
  * - POST /api/draft : Saves draft state (JSON)
  * - POST /api/fetch-scores : Automatively pulls matches & scores from openfootball on GitHub
  * - POST /api/matches : Manually updates individual match score (admin override)
- * - POST /api/settings : Configures custom point values for leaderboard
  * - GET / : Serves the live-polling, premium tabbed tournament dashboard
  */
 
@@ -119,7 +118,7 @@ function syncScoresWithOpenFootball(state, openFootballData) {
         localMatch.status = status;
         localMatch.date = m.date;
         localMatch.time = m.time;
-        localMatch.group = m.group || '';
+        localMatch.group = m.group || '',
         localMatch.round = m.round;
         localMatch.ground = m.ground || '';
       }
@@ -325,53 +324,7 @@ export default {
       }
     }
 
-    // 5. POST /api/settings - Update scoring configuration
-    if (path === '/api/settings' && method === 'POST') {
-      try {
-        const password = request.headers.get('X-Draft-Password');
-        if (password !== 'Tavoo') {
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            headers: { 'Content-Type': 'application/json', ...corsHeaders },
-            status: 401
-          });
-        }
-        
-        const body = await request.json();
-        const { scoringSettings } = body;
-        
-        if (scoringSettings) {
-          const state = await loadStateHelper();
-          
-          state.scoringSettings = {
-            groupWin: scoringSettings.groupWin !== undefined ? parseInt(scoringSettings.groupWin) : 3,
-            groupDraw: scoringSettings.groupDraw !== undefined ? parseInt(scoringSettings.groupDraw) : 1,
-            advanceR32: scoringSettings.advanceR32 !== undefined ? parseInt(scoringSettings.advanceR32) : 2,
-            advanceR16: scoringSettings.advanceR16 !== undefined ? parseInt(scoringSettings.advanceR16) : 4,
-            advanceQF: scoringSettings.advanceQF !== undefined ? parseInt(scoringSettings.advanceQF) : 6,
-            advanceSF: scoringSettings.advanceSF !== undefined ? parseInt(scoringSettings.advanceSF) : 8,
-            advanceFinal: scoringSettings.advanceFinal !== undefined ? parseInt(scoringSettings.advanceFinal) : 10,
-            winTournament: scoringSettings.winTournament !== undefined ? parseInt(scoringSettings.winTournament) : 12
-          };
-          
-          await saveStateHelper(state);
-          return new Response(JSON.stringify({ success: true, scoringSettings: state.scoringSettings }), {
-            headers: { 'Content-Type': 'application/json', ...corsHeaders }
-          });
-        }
-        
-        return new Response(JSON.stringify({ error: 'Invalid config' }), {
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-          status: 400
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), {
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-          status: 500
-        });
-      }
-    }
-
-    // 6. GET / or GET /summary - Serves the Premium Live Dashboard
+    // 5. GET / or GET /summary - Serves the Premium Live Dashboard
     if ((path === '/' || path === '/summary') && method === 'GET') {
       return new Response(getSummaryHTML(), {
         headers: { 'Content-Type': 'text/html' }
@@ -665,12 +618,12 @@ function getSummaryHTML() {
     }
     
     .stat-pill.points-pill {
-      background: rgba(212, 175, 55, 0.08);
-      border: 1px solid rgba(212, 175, 55, 0.25);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
     }
     
     .stat-pill.points-pill .val {
-      color: var(--color-gold);
+      color: var(--color-emerald);
       font-size: 20px;
       font-weight: 800;
     }
@@ -729,9 +682,9 @@ function getSummaryHTML() {
     
     .team-badge-right {
       font-family: 'Rajdhani', sans-serif;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
-      color: var(--color-gold);
+      color: rgba(255,255,255,0.5);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1082,7 +1035,7 @@ function getSummaryHTML() {
     }
     
     .admin-matches-editor-list {
-      max-height: 400px;
+      max-height: 480px;
       overflow-y: auto;
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px;
@@ -1283,45 +1236,20 @@ function getSummaryHTML() {
               </p>
             </div>
 
-            <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-              <h3 class="admin-label" style="margin-bottom: 10px;">Point Value Configurations</h3>
-              <form id="settings-form" onsubmit="savePointSettings(event)" style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="admin-grid-two-cols">
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Group Win</label>
-                    <input type="number" id="set-groupWin" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Group Draw</label>
-                    <input type="number" id="set-groupDraw" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Reach R32</label>
-                    <input type="number" id="set-advanceR32" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Reach R16</label>
-                    <input type="number" id="set-advanceR16" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Reach QF</label>
-                    <input type="number" id="set-advanceQF" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Reach SF</label>
-                    <input type="number" id="set-advanceSF" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Reach Final</label>
-                    <input type="number" id="set-advanceFinal" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                  <div class="admin-form-group">
-                    <label class="admin-label" style="font-size: 10px;">Champion</label>
-                    <input type="number" id="set-winTournament" class="admin-input" style="padding: 6px 12px;" required />
-                  </div>
-                </div>
-                <button type="submit" class="btn-submit" style="margin-top: 10px; padding: 8px 16px; font-size: 12px;">Save Scoring System</button>
-              </form>
+            <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">
+              <h3 class="admin-label" style="color: var(--color-gold-light);">Prizes & Rules Information</h3>
+              <p>The payouts are configured dynamically based on a <strong>£20 buy-in per player</strong>:</p>
+              <ul style="padding-left: 20px;">
+                <li><strong>1st Place</strong>: 75% of the total pot (awarded to the player who drafts the team that wins the Final).</li>
+                <li><strong>2nd Place</strong>: 25% of the total pot (awarded to the player who drafts the team that runner-ups in the Final).</li>
+              </ul>
+              <p>Player rankings are calculated and sorted by:</p>
+              <ol style="padding-left: 20px;">
+                <li>Active teams remaining in the tournament</li>
+                <li>Total match wins</li>
+                <li>Goals scored</li>
+                <li>Total draws</li>
+              </ol>
             </div>
           </div>
 
@@ -1353,7 +1281,6 @@ function getSummaryHTML() {
         renderStandings();
         renderFixtures();
         renderDraftBoard();
-        updateAdminForm();
         updatePlayerDropdown();
         
         if (globalState.lastScoresFetch) {
@@ -1380,7 +1307,7 @@ function getSummaryHTML() {
         const psw = localStorage.getItem('wc_draft_admin_pw');
         if (psw === 'Tavoo') {
           document.getElementById('admin-lock-screen').style.display = 'none';
-          document.getElementById('admin-main-console').style.display = 'flex';
+          document.getElementById('admin-main-console').style.display = 'block';
           renderAdminMatchesList();
         } else {
           document.getElementById('admin-lock-screen').style.display = 'flex';
@@ -1397,31 +1324,99 @@ function getSummaryHTML() {
         return;
       }
       
-      const computed = calculatePlayerStandings(globalState);
+      const buyIn = 20;
+      const totalPlayers = globalState.players.length;
+      const totalPot = totalPlayers * buyIn;
+      const payout1st = totalPlayers * 15;
+      const payout2nd = totalPlayers * 5;
       
-      let html = '<div class="standings-list">';
+      const computed = calculatePlayerStandings(globalState);
+      const matches = globalState.matches || [];
+      
+      // Find Final Match
+      const finalMatch = matches.find(m => m.round === 'Final');
+      let finalHtml = '';
+      if (finalMatch) {
+        const ownerHome = globalState.draftResults.find(r => r.team.name === finalMatch.homeTeam)?.player || 'TBD';
+        const ownerAway = globalState.draftResults.find(r => r.team.name === finalMatch.awayTeam)?.player || 'TBD';
+        
+        if (finalMatch.status === 'finished') {
+          const outcome = getMatchWinnerLoser(finalMatch);
+          const winnerTeam = outcome.winner;
+          const loserTeam = outcome.loser;
+          const winnerPlayer = globalState.draftResults.find(r => r.team.name === winnerTeam)?.player || 'CPU';
+          const loserPlayer = globalState.draftResults.find(r => r.team.name === loserTeam)?.player || 'CPU';
+          
+          finalHtml = \`
+            <div class="championship-banner" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(212, 175, 55, 0.05) 100%); border: 2px solid var(--color-emerald); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);">
+              <i class="fa-solid fa-crown" style="font-size: 32px; color: var(--color-gold); margin-bottom: 8px;"></i>
+              <h2 style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 800; color: var(--color-emerald); text-transform: uppercase;">🏆 TOURNAMENT COMPLETED 🏆</h2>
+              <p style="font-size: 13px; margin-top: 6px; line-height: 1.6;">
+                <strong>1st Place Champion</strong>: <span style="color:var(--color-gold-light); font-weight:800;">\\\${winnerPlayer}</span> wins <strong>£\\\${payout1st}</strong> (Drafted <strong>\\\${winnerTeam}</strong>)<br>
+                <strong>2nd Place Runner-Up</strong>: <span style="color:#ffffff; font-weight:800;">\\\${loserPlayer}</span> wins <strong>£\\\${payout2nd}</strong> (Drafted <strong>\\\${loserTeam}</strong>)
+              </p>
+            </div>
+          \`;
+        } else {
+          finalHtml = \`
+            <div class="championship-banner" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(7, 10, 20, 0.5) 100%); border: 2px solid var(--color-gold); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 20px var(--color-gold-glow);">
+              <i class="fa-solid fa-trophy" style="font-size: 32px; color: var(--color-gold); margin-bottom: 8px;"></i>
+              <h2 style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 800; color: var(--color-gold-light); text-transform: uppercase;">🏆 THE CHAMPIONSHIP FINAL 🏆</h2>
+              <p style="font-size: 13px; margin-top: 6px; line-height: 1.6;">
+                Matchup: <strong>\\\${finalMatch.homeTeam} (\\\${ownerHome})</strong> vs <strong>\\\${finalMatch.awayTeam} (\\\${ownerAway})</strong><br>
+                They are playing head-to-head for <strong>£\\\${payout1st} (1st Place)</strong> and <strong>£\\\${payout2nd} (2nd Place)</strong>!
+              </p>
+            </div>
+          \`;
+        }
+      }
+      
+      let html = \`
+        <div class="prize-pool-banner" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(13, 61, 34, 0.3) 100%); border: 1px solid var(--color-gold); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+          <div>
+            <h3 style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 800; color: var(--color-gold-light); text-transform: uppercase;">💰 PRIZE POOL BOARD</h3>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.6);">Buy-in: £20 per player • Total Pot: £\\\${totalPot} (\\\${totalPlayers} Players)</span>
+          </div>
+          <div style="display: flex; gap: 20px; font-family: 'Rajdhani', sans-serif;">
+            <div style="text-align: right;">
+              <div style="font-size: 10px; color: var(--color-gold-light); text-transform: uppercase; font-weight: 700;">1st Place (Winner)</div>
+              <div style="font-size: 24px; font-weight: 800; color: var(--color-gold);">£\\\${payout1st}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 700;">2nd Place (Runner-Up)</div>
+              <div style="font-size: 24px; font-weight: 800; color: #fff;">£\\\${payout2nd}</div>
+            </div>
+          </div>
+        </div>
+      \`;
+      
+      html += finalHtml;
+      html += '<div class="standings-list">';
+      
       computed.forEach((p, idx) => {
         const rank = idx + 1;
+        const record = \`\\\${p.wins}W - \\\${p.draws}D - \\\${p.losses}L\`;
+        
         html += \`
-          <div class="player-rank-card rank-\${rank}">
+          <div class="player-rank-card rank-\\\${rank}">
             <div class="player-rank-header">
               <div class="rank-and-name">
-                <span class="rank-number">\${rank}</span>
-                <span class="player-profile-name">\${p.name}</span>
+                <span class="rank-number">\\\${rank}</span>
+                <span class="player-profile-name">\\\${p.name}</span>
               </div>
               
               <div class="score-summary-pills">
                 <div class="stat-pill">
-                  <span>Wins</span>
-                  <span class="val">\${p.wins}</span>
+                  <span>Record</span>
+                  <span class="val" style="font-size: 14px; font-family:'Montserrat',sans-serif;">\\\${record}</span>
                 </div>
                 <div class="stat-pill">
-                  <span>Active</span>
-                  <span class="val">\${p.activeTeamsCount}</span>
+                  <span>Goals</span>
+                  <span class="val">\\\${p.goalsFor}</span>
                 </div>
                 <div class="stat-pill points-pill">
-                  <span>Points</span>
-                  <span class="val">\${p.points}</span>
+                  <span>Active</span>
+                  <span class="val" style="color: var(--color-emerald);">\\\${p.activeTeamsCount}</span>
                 </div>
               </div>
             </div>
@@ -1430,15 +1425,16 @@ function getSummaryHTML() {
         \`;
         
         p.teams.forEach(t => {
+          const tRecord = \`\\\${t.wins}W-\\\${t.draws}D-\\\${t.losses}L, \\\${t.goalsFor} GF\`;
           html += \`
-            <div class="team-badge-card \${t.isEliminated ? 'eliminated' : ''}">
+            <div class="team-badge-card \\\${t.isEliminated ? 'eliminated' : ''}">
               <div class="team-badge-left">
-                <img src="https://flagcdn.com/w40/\${t.code}.png" class="dashboard-flag" alt="\${t.name}" />
-                <span class="dashboard-team-name">\${t.name}</span>
+                <img src="https://flagcdn.com/w40/\\\${t.code}.png" class="dashboard-flag" alt="\\\\\${t.name}" />
+                <span class="dashboard-team-name">\\\${t.name}</span>
               </div>
               <div class="team-badge-right">
-                <span>\${t.points} pts</span>
-                \${t.isEliminated ? '<span class="eliminated-tag">OUT</span>' : ''}
+                <span style="font-size: 10px; font-family:'Montserrat',sans-serif;">\\\${tRecord}</span>
+                \\\${t.isEliminated ? '<span class="eliminated-tag">OUT</span>' : ''}
               </div>
             </div>
           \`;
@@ -1497,59 +1493,59 @@ function getSummaryHTML() {
         let h2hHtml = '';
         if (owner1 && owner2) {
           if (owner1 === owner2) {
-            h2hHtml = \`<span class="h2h-pill h2h-friendly"><i class="fa-solid fa-handshake"></i> \${owner1} Clash</span>\`;
+            h2hHtml = \`<span class="h2h-pill h2h-friendly"><i class="fa-solid fa-handshake"></i> \\\${owner1} Clash</span>\`;
           } else {
-            h2hHtml = \`<span class="h2h-pill h2h-clash"><i class="fa-solid fa-fire"></i> \${owner1} vs \${owner2}</span>\`;
+            h2hHtml = \`<span class="h2h-pill h2h-clash"><i class="fa-solid fa-fire"></i> \\\${owner1} vs \\\${owner2}</span>\`;
           }
         } else if (owner1 || owner2) {
-          h2hHtml = \`<span class="h2h-pill h2h-cpu"><i class="fa-solid fa-shield"></i> \${owner1 || owner2} vs CPU</span>\`;
+          h2hHtml = \`<span class="h2h-pill h2h-cpu"><i class="fa-solid fa-shield"></i> \\\${owner1 || owner2} vs CPU</span>\`;
         }
         
         const isLive = m.status === 'live';
         const isFinished = m.status === 'finished';
         
         html += \`
-          <div class="match-card \${isFinished ? 'finished' : ''} \${isLive ? 'live-state' : ''}">
+          <div class="match-card \\\${isFinished ? 'finished' : ''} \\\${isLive ? 'live-state' : ''}">
             <div class="match-top-row">
-              <span class="stage-badge">\${m.round} \${m.group ? '• ' + m.group : ''}</span>
-              \${h2hHtml}
+              <span class="stage-badge">\\\${m.round} \\\${m.group ? '• ' + m.group : ''}</span>
+              \\\${h2hHtml}
             </div>
             
             <div class="match-teams-score-area">
               <!-- Home -->
               <div class="match-team">
-                \${code1 ? \`<img src="https://flagcdn.com/w80/\${code1}.png" class="match-team-flag-large" alt="\${m.homeTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
-                <span class="match-team-name-label">\${m.homeTeam}</span>
-                \${owner1 ? \`<span class="match-team-owner-label">(\${owner1})</span>\` : ''}
+                \\\${code1 ? \`<img src="https://flagcdn.com/w80/\\\${code1}.png" class="match-team-flag-large" alt="\\\\\${m.homeTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
+                <span class="match-team-name-label">\\\${m.homeTeam}</span>
+                \\\${owner1 ? \`<span class="match-team-owner-label">(\\\${owner1})</span>\` : ''}
               </div>
               
               <!-- Center Score -->
               <div class="match-score-center">
-                \${isFinished || isLive ? \`
+                \\\${isFinished || isLive ? \`
                   <div class="match-score-digits">
-                    <span>\${m.homeScore}</span>
+                    <span>\\\${m.homeScore}</span>
                     <span>-</span>
-                    <span>\${m.awayScore}</span>
+                    <span>\\\${m.awayScore}</span>
                   </div>
                 \` : \`
                   <div class="match-score-digits no-score">
                     <span>VS</span>
                   </div>
                 \`}
-                \${isLive ? '<span class="match-time-ticker">LIVE</span>' : ''}
+                \\\${isLive ? '<span class="match-time-ticker">LIVE</span>' : ''}
               </div>
               
               <!-- Away -->
               <div class="match-team">
-                \${code2 ? \`<img src="https://flagcdn.com/w80/\${code2}.png" class="match-team-flag-large" alt="\${m.awayTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
-                <span class="match-team-name-label">\${m.awayTeam}</span>
-                \${owner2 ? \`<span class="match-team-owner-label">(\${owner2})</span>\` : ''}
+                \\\${code2 ? \`<img src="https://flagcdn.com/w80/\\\${code2}.png" class="match-team-flag-large" alt="\\\\\${m.awayTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
+                <span class="match-team-name-label">\\\${m.awayTeam}</span>
+                \\\${owner2 ? \`<span class="match-team-owner-label">(\\\${owner2})</span>\` : ''}
               </div>
             </div>
             
             <div class="match-bottom-details">
-              <span>\${m.ground || 'Venue TBD'}</span>
-              <span>\${m.date} \${m.time || ''}</span>
+              <span>\\\${m.ground || 'Venue TBD'}</span>
+              <span>\\\${m.date} \\\${m.time || ''}</span>
             </div>
           </div>
         \`;
@@ -1598,7 +1594,7 @@ function getSummaryHTML() {
       dropdown.innerHTML = '<option value="all">Filter by Player (All)</option>';
       if (globalState && globalState.players) {
         globalState.players.forEach(p => {
-          dropdown.innerHTML += \`<option value="\${p.name}">\${p.name}</option>\`;
+          dropdown.innerHTML += \`<option value="\\\${p.name}">\\\${p.name}</option>\`;
         });
       }
       dropdown.value = currentPlayerFilter;
@@ -1633,10 +1629,10 @@ function getSummaryHTML() {
         const quotaMet = playerResults.length >= player.maxDrafts;
         
         html += \`
-          <div class="player-rank-card \${quotaMet ? 'player-card-complete' : ''}" style="\${quotaMet ? 'border: 2px solid var(--color-gold);' : ''}">
+          <div class="player-rank-card \\\${quotaMet ? 'player-card-complete' : ''}" style="\\\${quotaMet ? 'border: 2px solid var(--color-gold);' : ''}">
             <div class="player-rank-header" style="border: none; padding-bottom: 0;">
-              <h3 style="font-size: 16px; font-weight: 800; text-transform: uppercase; color: #fff;">\${player.name}</h3>
-              <span style="font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-gold);">\${playerResults.length} / \${player.maxDrafts}</span>
+              <h3 style="font-size: 16px; font-weight: 800; text-transform: uppercase; color: #fff;">\\\${player.name}</h3>
+              <span style="font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-gold);">\\\${playerResults.length} / \\\${player.maxDrafts}</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
         \`;
@@ -1647,8 +1643,8 @@ function getSummaryHTML() {
           playerResults.forEach(res => {
             html += \`
               <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 10px;">
-                <img src="https://flagcdn.com/w40/\${res.team.code}.png" style="width: 32px; height: 20px; object-fit: cover; border-radius: 3px;" alt="\${res.team.name}" />
-                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase;">\${res.team.name}</span>
+                <img src="https://flagcdn.com/w40/\\\${res.team.code}.png" style="width: 32px; height: 20px; object-fit: cover; border-radius: 3px;" alt="\\\\\${res.team.name}" />
+                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase;">\\\${res.team.name}</span>
               </div>
             \`;
           });
@@ -1682,58 +1678,6 @@ function getSummaryHTML() {
       document.getElementById('admin-lock-screen').style.display = 'flex';
       document.getElementById('admin-main-console').style.display = 'none';
       document.getElementById('admin-password').value = '';
-    }
-
-    function updateAdminForm() {
-      if (!globalState || !globalState.scoringSettings) return;
-      const s = globalState.scoringSettings;
-      document.getElementById('set-groupWin').value = s.groupWin;
-      document.getElementById('set-groupDraw').value = s.groupDraw;
-      document.getElementById('set-advanceR32').value = s.advanceR32;
-      document.getElementById('set-advanceR16').value = s.advanceR16;
-      document.getElementById('set-advanceQF').value = s.advanceQF;
-      document.getElementById('set-advanceSF').value = s.advanceSF;
-      document.getElementById('set-advanceFinal').value = s.advanceFinal;
-      document.getElementById('set-winTournament').value = s.winTournament;
-    }
-
-    // Save Point Settings
-    async function savePointSettings(e) {
-      e.preventDefault();
-      const psw = localStorage.getItem('wc_draft_admin_pw');
-      
-      const payload = {
-        scoringSettings: {
-          groupWin: document.getElementById('set-groupWin').value,
-          groupDraw: document.getElementById('set-groupDraw').value,
-          advanceR32: document.getElementById('set-advanceR32').value,
-          advanceR16: document.getElementById('set-advanceR16').value,
-          advanceQF: document.getElementById('set-advanceQF').value,
-          advanceSF: document.getElementById('set-advanceSF').value,
-          advanceFinal: document.getElementById('set-advanceFinal').value,
-          winTournament: document.getElementById('set-winTournament').value
-        }
-      };
-
-      try {
-        const res = await fetch('/api/settings', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Draft-Password': psw
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (res.ok) {
-          alert('Scoring system updated successfully!');
-          loadData();
-        } else {
-          alert('Failed to update scoring settings.');
-        }
-      } catch (err) {
-        alert('Network error updating settings: ' + err.message);
-      }
     }
 
     // Trigger openfootball automated scores collection
@@ -1803,7 +1747,7 @@ function getSummaryHTML() {
           }
         }
         
-        alert(\`Successfully simulated \${count} matches! Leaderboard updated.\`);
+        alert(\`Successfully simulated \\\${count} matches! Leaderboard updated.\`);
         await loadData();
         renderAdminMatchesList();
       } catch (err) {
@@ -1843,30 +1787,30 @@ function getSummaryHTML() {
           <div class="admin-match-row-item">
             <div style="display:flex; flex-direction:column; min-width: 0;">
               <span class="admin-match-teams-label" style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
-                \${m.homeTeam} vs \${m.awayTeam}
+                \\\${m.homeTeam} vs \\\${m.awayTeam}
               </span>
-              <span style="font-size:9px; color:rgba(255,255,255,0.4);">\${m.round}</span>
+              <span style="font-size:9px; color:rgba(255,255,255,0.4);">\\\${m.round}</span>
             </div>
             
             <div class="admin-match-inputs">
-              <input type="number" min="0" max="20" placeholder="H" value="\${homeScoreVal}" class="admin-score-input" id="admin-h-\${m.id}" />
+              <input type="number" min="0" max="20" placeholder="H" value="\\\${homeScoreVal}" class="admin-score-input" id="admin-h-\\\${m.id}" />
               <span>-</span>
-              <input type="number" min="0" max="20" placeholder="A" value="\${awayScoreVal}" class="admin-score-input" id="admin-a-\${m.id}" />
+              <input type="number" min="0" max="20" placeholder="A" value="\\\${awayScoreVal}" class="admin-score-input" id="admin-a-\\\${m.id}" />
               
-              <select class="admin-match-select" id="admin-s-\${m.id}">
+              <select class="admin-match-select" id="admin-s-\\\${m.id}">
                 <option value="scheduled" \${m.status === 'scheduled' ? 'selected' : ''}>Sch</option>
                 <option value="finished" \${m.status === 'finished' ? 'selected' : ''}>Fin</option>
                 <option value="live" \${m.status === 'live' ? 'selected' : ''}>Live</option>
               </select>
               
-              <button class="btn-save-match" onclick="saveManualMatchScore('\${m.id}')">Save</button>
+              <button class="btn-save-match" onclick="saveManualMatchScore('\\\\${m.id}')">Save</button>
             </div>
           </div>
         \`;
       });
       
       if (filtered.length > 50) {
-        html += \`<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.3); padding-top:8px;">Showing first 50 results (Total: \${filtered.length})</div>\`;
+        html += \`<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.3); padding-top:8px;">Showing first 50 results (Total: \\\${filtered.length})</div>\`;
       }
       
       container.innerHTML = html;
@@ -1908,16 +1852,14 @@ function getSummaryHTML() {
       }
     }
 
-    // Helper client-side Standings calculator (re-calculates standings instantly on data loads)
+    // Helper client-side Standings calculator (computes wins/draws/losses/goals)
     function calculatePlayerStandings(state) {
-      const settings = state.scoringSettings || defaultSettings;
       const matches = state.matches || [];
       
       const standings = {};
       state.players.forEach(p => {
         standings[p.name] = {
           name: p.name,
-          points: 0,
           wins: 0,
           draws: 0,
           losses: 0,
@@ -1936,20 +1878,15 @@ function getSummaryHTML() {
         
         if (!standings[pName]) return;
         
-        let teamPoints = 0;
         let teamWins = 0;
         let teamDraws = 0;
         let teamLosses = 0;
         let teamGoals = 0;
-        
-        const awardedKnockouts = { R32: false, R16: false, QF: false, SF: false, Final: false, Winner: false };
 
         matches.forEach(m => {
           const isHome = m.homeTeam === tName;
           const isAway = m.awayTeam === tName;
           if (!isHome && !isAway) return;
-          
-          const isGroup = m.round.startsWith('Matchday');
           
           if (m.homeScore !== null && m.awayScore !== null) {
             teamGoals += isHome ? m.homeScore : m.awayScore;
@@ -1958,45 +1895,11 @@ function getSummaryHTML() {
           if (m.status === 'finished') {
             const outcome = getMatchWinnerLoser(m);
             if (outcome.draw) {
-              if (isGroup) {
-                teamPoints += settings.groupDraw;
-                teamDraws++;
-              }
+              teamDraws++;
             } else if (outcome.winner === tName) {
-              if (isGroup) {
-                teamPoints += settings.groupWin;
-                teamWins++;
-              }
+              teamWins++;
             } else {
-              if (isGroup) {
-                teamLosses++;
-              }
-            }
-          }
-          
-          const r = m.round;
-          if (r === 'Round of 32' && !awardedKnockouts.R32) {
-            teamPoints += settings.advanceR32;
-            awardedKnockouts.R32 = true;
-          } else if (r === 'Round of 16' && !awardedKnockouts.R16) {
-            teamPoints += settings.advanceR16;
-            awardedKnockouts.R16 = true;
-          } else if ((r === 'Quarter-final' || r === 'Quarter-finals') && !awardedKnockouts.QF) {
-            teamPoints += settings.advanceQF;
-            awardedKnockouts.QF = true;
-          } else if ((r === 'Semi-final' || r === 'Semi-finals') && !awardedKnockouts.SF) {
-            teamPoints += settings.advanceSF;
-            awardedKnockouts.SF = true;
-          } else if (r === 'Final' && !awardedKnockouts.Final) {
-            teamPoints += settings.advanceFinal;
-            awardedKnockouts.Final = true;
-            
-            if (m.status === 'finished') {
-              const outcome = getMatchWinnerLoser(m);
-              if (outcome.winner === tName && !awardedKnockouts.Winner) {
-                teamPoints += settings.winTournament;
-                awardedKnockouts.Winner = true;
-              }
+              teamLosses++;
             }
           }
         });
@@ -2013,7 +1916,6 @@ function getSummaryHTML() {
           }
         }
         
-        standings[pName].points += teamPoints;
         standings[pName].wins += teamWins;
         standings[pName].draws += teamDraws;
         standings[pName].losses += teamLosses;
@@ -2025,13 +1927,41 @@ function getSummaryHTML() {
         standings[pName].teams.push({
           name: tName,
           code: tCode,
-          points: teamPoints,
+          wins: teamWins,
+          draws: teamDraws,
+          losses: teamLosses,
           goalsFor: teamGoals,
           isEliminated: isEliminated
         });
       });
 
-      return Object.values(standings).sort((a, b) => b.points - a.points || b.activeTeamsCount - a.activeTeamsCount || b.wins - a.wins || b.goalsFor - a.goalsFor);
+      // Sort by: active teams remaining, then wins, then goals for, then draws
+      return Object.values(standings).sort((a, b) => 
+        b.activeTeamsCount - a.activeTeamsCount || 
+        b.wins - a.wins || 
+        b.goalsFor - a.goalsFor || 
+        b.draws - a.draws
+      );
+    }
+
+    function getMatchWinnerLoser(m) {
+      if (m.status !== 'finished' || !m.score) return { winner: null, loser: null, draw: false };
+      const score = m.score;
+      
+      if (score.p) {
+        return score.p[0] > score.p[1] 
+          ? { winner: m.homeTeam, loser: m.awayTeam, draw: false }
+          : { winner: m.awayTeam, loser: m.homeTeam, draw: false };
+      }
+      if (score.et) {
+        if (score.et[0] > score.et[1]) return { winner: m.homeTeam, loser: m.awayTeam, draw: false };
+        if (score.et[1] > score.et[0]) return { winner: m.awayTeam, loser: m.homeTeam, draw: false };
+      }
+      if (score.ft) {
+        if (score.ft[0] > score.ft[1]) return { winner: m.homeTeam, loser: m.awayTeam, draw: false };
+        if (score.ft[1] > score.ft[0]) return { winner: m.awayTeam, loser: m.homeTeam, draw: false };
+      }
+      return { winner: null, loser: m.awayTeam, draw: true };
     }
 
     // Startup initialization

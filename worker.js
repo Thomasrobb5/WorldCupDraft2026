@@ -1352,8 +1352,8 @@ function getSummaryHTML() {
               <i class="fa-solid fa-crown" style="font-size: 32px; color: var(--color-gold); margin-bottom: 8px;"></i>
               <h2 style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 800; color: var(--color-emerald); text-transform: uppercase;">🏆 TOURNAMENT COMPLETED 🏆</h2>
               <p style="font-size: 13px; margin-top: 6px; line-height: 1.6;">
-                <strong>1st Place Champion</strong>: <span style="color:var(--color-gold-light); font-weight:800;">\\\${winnerPlayer}</span> wins <strong>£\\\${payout1st}</strong> (Drafted <strong>\\\${winnerTeam}</strong>)<br>
-                <strong>2nd Place Runner-Up</strong>: <span style="color:#ffffff; font-weight:800;">\\\${loserPlayer}</span> wins <strong>£\\\${payout2nd}</strong> (Drafted <strong>\\\${loserTeam}</strong>)
+                <strong>1st Place Champion</strong>: <span style="color:var(--color-gold-light); font-weight:800;">\${winnerPlayer}</span> wins <strong>£\${payout1st}</strong> (Drafted <strong>\${winnerTeam}</strong>)<br>
+                <strong>2nd Place Runner-Up</strong>: <span style="color:#ffffff; font-weight:800;">\${loserPlayer}</span> wins <strong>£\${payout2nd}</strong> (Drafted <strong>\${loserTeam}</strong>)
               </p>
             </div>
           \`;
@@ -1363,8 +1363,8 @@ function getSummaryHTML() {
               <i class="fa-solid fa-trophy" style="font-size: 32px; color: var(--color-gold); margin-bottom: 8px;"></i>
               <h2 style="font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 800; color: var(--color-gold-light); text-transform: uppercase;">🏆 THE CHAMPIONSHIP FINAL 🏆</h2>
               <p style="font-size: 13px; margin-top: 6px; line-height: 1.6;">
-                Matchup: <strong>\\\${finalMatch.homeTeam} (\\\${ownerHome})</strong> vs <strong>\\\${finalMatch.awayTeam} (\\\${ownerAway})</strong><br>
-                They are playing head-to-head for <strong>£\\\${payout1st} (1st Place)</strong> and <strong>£\\\${payout2nd} (2nd Place)</strong>!
+                Matchup: <strong>\${finalMatch.homeTeam} (\${ownerHome})</strong> vs <strong>\${finalMatch.awayTeam} (\${ownerAway})</strong><br>
+                They are playing head-to-head for <strong>£\${payout1st} (1st Place)</strong> and <strong>£\${payout2nd} (2nd Place)</strong>!
               </p>
             </div>
           \`;
@@ -1375,16 +1375,16 @@ function getSummaryHTML() {
         <div class="prize-pool-banner" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(13, 61, 34, 0.3) 100%); border: 1px solid var(--color-gold); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
           <div>
             <h3 style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 800; color: var(--color-gold-light); text-transform: uppercase;">💰 PRIZE POOL BOARD</h3>
-            <span style="font-size: 11px; color: rgba(255,255,255,0.6);">Buy-in: £20 per player • Total Pot: £\\\${totalPot} (\\\${totalPlayers} Players)</span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.6);">Buy-in: £20 per player • Total Pot: £\${totalPot} (\${totalPlayers} Players)</span>
           </div>
           <div style="display: flex; gap: 20px; font-family: 'Rajdhani', sans-serif;">
             <div style="text-align: right;">
               <div style="font-size: 10px; color: var(--color-gold-light); text-transform: uppercase; font-weight: 700;">1st Place (Winner)</div>
-              <div style="font-size: 24px; font-weight: 800; color: var(--color-gold);">£\\\${payout1st}</div>
+              <div style="font-size: 24px; font-weight: 800; color: var(--color-gold);">£\${payout1st}</div>
             </div>
             <div style="text-align: right;">
               <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 700;">2nd Place (Runner-Up)</div>
-              <div style="font-size: 24px; font-weight: 800; color: #fff;">£\\\${payout2nd}</div>
+              <div style="font-size: 24px; font-weight: 800; color: #fff;">£\${payout2nd}</div>
             </div>
           </div>
         </div>
@@ -1395,28 +1395,28 @@ function getSummaryHTML() {
       
       computed.forEach((p, idx) => {
         const rank = idx + 1;
-        const record = \`\\\${p.wins}W - \\\${p.draws}D - \\\${p.losses}L\`;
+        const record = \`\${p.wins}W - \${p.draws}D - \${p.losses}L\`;
         
         html += \`
-          <div class="player-rank-card rank-\\\${rank}">
+          <div class="player-rank-card rank-\${rank}">
             <div class="player-rank-header">
               <div class="rank-and-name">
-                <span class="rank-number">\\\${rank}</span>
-                <span class="player-profile-name">\\\${p.name}</span>
+                <span class="rank-number">\${rank}</span>
+                <span class="player-profile-name">\${p.name}</span>
               </div>
               
               <div class="score-summary-pills">
                 <div class="stat-pill">
                   <span>Record</span>
-                  <span class="val" style="font-size: 14px; font-family:'Montserrat',sans-serif;">\\\${record}</span>
+                  <span class="val" style="font-size: 14px; font-family:'Montserrat',sans-serif;">\${record}</span>
                 </div>
                 <div class="stat-pill">
                   <span>Goals</span>
-                  <span class="val">\\\${p.goalsFor}</span>
+                  <span class="val">\${p.goalsFor}</span>
                 </div>
                 <div class="stat-pill points-pill">
                   <span>Active</span>
-                  <span class="val" style="color: var(--color-emerald);">\\\${p.activeTeamsCount}</span>
+                  <span class="val" style="color: var(--color-emerald);">\${p.activeTeamsCount}</span>
                 </div>
               </div>
             </div>
@@ -1425,16 +1425,16 @@ function getSummaryHTML() {
         \`;
         
         p.teams.forEach(t => {
-          const tRecord = \`\\\${t.wins}W-\\\${t.draws}D-\\\${t.losses}L, \\\${t.goalsFor} GF\`;
+          const tRecord = \`\${t.wins}W-\${t.draws}D-\${t.losses}L, \${t.goalsFor} GF\`;
           html += \`
-            <div class="team-badge-card \\\${t.isEliminated ? 'eliminated' : ''}">
+            <div class="team-badge-card \${t.isEliminated ? 'eliminated' : ''}">
               <div class="team-badge-left">
-                <img src="https://flagcdn.com/w40/\\\${t.code}.png" class="dashboard-flag" alt="\\\\\${t.name}" />
-                <span class="dashboard-team-name">\\\${t.name}</span>
+                <img src="https://flagcdn.com/w40/\${t.code}.png" class="dashboard-flag" alt="\${t.name}" />
+                <span class="dashboard-team-name">\${t.name}</span>
               </div>
               <div class="team-badge-right">
-                <span style="font-size: 10px; font-family:'Montserrat',sans-serif;">\\\${tRecord}</span>
-                \\\${t.isEliminated ? '<span class="eliminated-tag">OUT</span>' : ''}
+                <span style="font-size: 10px; font-family:'Montserrat',sans-serif;">\${tRecord}</span>
+                \${t.isEliminated ? '<span class="eliminated-tag">OUT</span>' : ''}
               </div>
             </div>
           \`;
@@ -1493,59 +1493,59 @@ function getSummaryHTML() {
         let h2hHtml = '';
         if (owner1 && owner2) {
           if (owner1 === owner2) {
-            h2hHtml = \`<span class="h2h-pill h2h-friendly"><i class="fa-solid fa-handshake"></i> \\\${owner1} Clash</span>\`;
+            h2hHtml = \`<span class="h2h-pill h2h-friendly"><i class="fa-solid fa-handshake"></i> \${owner1} Clash</span>\`;
           } else {
-            h2hHtml = \`<span class="h2h-pill h2h-clash"><i class="fa-solid fa-fire"></i> \\\${owner1} vs \\\${owner2}</span>\`;
+            h2hHtml = \`<span class="h2h-pill h2h-clash"><i class="fa-solid fa-fire"></i> \${owner1} vs \${owner2}</span>\`;
           }
         } else if (owner1 || owner2) {
-          h2hHtml = \`<span class="h2h-pill h2h-cpu"><i class="fa-solid fa-shield"></i> \\\${owner1 || owner2} vs CPU</span>\`;
+          h2hHtml = \`<span class="h2h-pill h2h-cpu"><i class="fa-solid fa-shield"></i> \${owner1 || owner2} vs CPU</span>\`;
         }
         
         const isLive = m.status === 'live';
         const isFinished = m.status === 'finished';
         
         html += \`
-          <div class="match-card \\\${isFinished ? 'finished' : ''} \\\${isLive ? 'live-state' : ''}">
+          <div class="match-card \${isFinished ? 'finished' : ''} \${isLive ? 'live-state' : ''}">
             <div class="match-top-row">
-              <span class="stage-badge">\\\${m.round} \\\${m.group ? '• ' + m.group : ''}</span>
-              \\\${h2hHtml}
+              <span class="stage-badge">\${m.round} \${m.group ? '• ' + m.group : ''}</span>
+              \${h2hHtml}
             </div>
             
             <div class="match-teams-score-area">
               <!-- Home -->
               <div class="match-team">
-                \\\${code1 ? \`<img src="https://flagcdn.com/w80/\\\${code1}.png" class="match-team-flag-large" alt="\\\\\${m.homeTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
-                <span class="match-team-name-label">\\\${m.homeTeam}</span>
-                \\\${owner1 ? \`<span class="match-team-owner-label">(\\\${owner1})</span>\` : ''}
+                \${code1 ? \`<img src="https://flagcdn.com/w80/\${code1}.png" class="match-team-flag-large" alt="\${m.homeTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
+                <span class="match-team-name-label">\${m.homeTeam}</span>
+                \${owner1 ? \`<span class="match-team-owner-label">(\${owner1})</span>\` : ''}
               </div>
               
               <!-- Center Score -->
               <div class="match-score-center">
-                \\\${isFinished || isLive ? \`
+                \${isFinished || isLive ? \`
                   <div class="match-score-digits">
-                    <span>\\\${m.homeScore}</span>
+                    <span>\${m.homeScore}</span>
                     <span>-</span>
-                    <span>\\\${m.awayScore}</span>
+                    <span>\${m.awayScore}</span>
                   </div>
                 \` : \`
                   <div class="match-score-digits no-score">
                     <span>VS</span>
                   </div>
                 \`}
-                \\\${isLive ? '<span class="match-time-ticker">LIVE</span>' : ''}
+                \${isLive ? '<span class="match-time-ticker">LIVE</span>' : ''}
               </div>
               
               <!-- Away -->
               <div class="match-team">
-                \\\${code2 ? \`<img src="https://flagcdn.com/w80/\\\${code2}.png" class="match-team-flag-large" alt="\\\\\${m.awayTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
-                <span class="match-team-name-label">\\\${m.awayTeam}</span>
-                \\\${owner2 ? \`<span class="match-team-owner-label">(\\\${owner2})</span>\` : ''}
+                \${code2 ? \`<img src="https://flagcdn.com/w80/\${code2}.png" class="match-team-flag-large" alt="\${m.awayTeam}" onerror="this.style.display='none'" />\` : '<div class="match-team-flag-large" style="background:#0f172a; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa;">TBD</div>'}
+                <span class="match-team-name-label">\${m.awayTeam}</span>
+                \${owner2 ? \`<span class="match-team-owner-label">(\${owner2})</span>\` : ''}
               </div>
             </div>
             
             <div class="match-bottom-details">
-              <span>\\\${m.ground || 'Venue TBD'}</span>
-              <span>\\\${m.date} \\\${m.time || ''}</span>
+              <span>\${m.ground || 'Venue TBD'}</span>
+              <span>\${m.date} \${m.time || ''}</span>
             </div>
           </div>
         \`;
@@ -1594,7 +1594,7 @@ function getSummaryHTML() {
       dropdown.innerHTML = '<option value="all">Filter by Player (All)</option>';
       if (globalState && globalState.players) {
         globalState.players.forEach(p => {
-          dropdown.innerHTML += \`<option value="\\\${p.name}">\\\${p.name}</option>\`;
+          dropdown.innerHTML += \`<option value="\${p.name}">\${p.name}</option>\`;
         });
       }
       dropdown.value = currentPlayerFilter;
@@ -1629,10 +1629,10 @@ function getSummaryHTML() {
         const quotaMet = playerResults.length >= player.maxDrafts;
         
         html += \`
-          <div class="player-rank-card \\\${quotaMet ? 'player-card-complete' : ''}" style="\\\${quotaMet ? 'border: 2px solid var(--color-gold);' : ''}">
+          <div class="player-rank-card \${quotaMet ? 'player-card-complete' : ''}" style="\${quotaMet ? 'border: 2px solid var(--color-gold);' : ''}">
             <div class="player-rank-header" style="border: none; padding-bottom: 0;">
-              <h3 style="font-size: 16px; font-weight: 800; text-transform: uppercase; color: #fff;">\\\${player.name}</h3>
-              <span style="font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-gold);">\\\${playerResults.length} / \\\${player.maxDrafts}</span>
+              <h3 style="font-size: 16px; font-weight: 800; text-transform: uppercase; color: #fff;">\${player.name}</h3>
+              <span style="font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-gold);">\${playerResults.length} / \${player.maxDrafts}</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
         \`;
@@ -1643,8 +1643,8 @@ function getSummaryHTML() {
           playerResults.forEach(res => {
             html += \`
               <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 10px;">
-                <img src="https://flagcdn.com/w40/\\\${res.team.code}.png" style="width: 32px; height: 20px; object-fit: cover; border-radius: 3px;" alt="\\\\\${res.team.name}" />
-                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase;">\\\${res.team.name}</span>
+                <img src="https://flagcdn.com/w40/\${res.team.code}.png" style="width: 32px; height: 20px; object-fit: cover; border-radius: 3px;" alt="\${res.team.name}" />
+                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase;">\${res.team.name}</span>
               </div>
             \`;
           });
@@ -1747,7 +1747,7 @@ function getSummaryHTML() {
           }
         }
         
-        alert(\`Successfully simulated \\\${count} matches! Leaderboard updated.\`);
+        alert(\`Successfully simulated \${count} matches! Leaderboard updated.\`);
         await loadData();
         renderAdminMatchesList();
       } catch (err) {
@@ -1787,30 +1787,30 @@ function getSummaryHTML() {
           <div class="admin-match-row-item">
             <div style="display:flex; flex-direction:column; min-width: 0;">
               <span class="admin-match-teams-label" style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
-                \\\${m.homeTeam} vs \\\${m.awayTeam}
+                \${m.homeTeam} vs \${m.awayTeam}
               </span>
-              <span style="font-size:9px; color:rgba(255,255,255,0.4);">\\\${m.round}</span>
+              <span style="font-size:9px; color:rgba(255,255,255,0.4);">\${m.round}</span>
             </div>
             
             <div class="admin-match-inputs">
-              <input type="number" min="0" max="20" placeholder="H" value="\\\${homeScoreVal}" class="admin-score-input" id="admin-h-\\\${m.id}" />
+              <input type="number" min="0" max="20" placeholder="H" value="\${homeScoreVal}" class="admin-score-input" id="admin-h-\${m.id}" />
               <span>-</span>
-              <input type="number" min="0" max="20" placeholder="A" value="\\\${awayScoreVal}" class="admin-score-input" id="admin-a-\\\${m.id}" />
+              <input type="number" min="0" max="20" placeholder="A" value="\${awayScoreVal}" class="admin-score-input" id="admin-a-\${m.id}" />
               
-              <select class="admin-match-select" id="admin-s-\\\${m.id}">
+              <select class="admin-match-select" id="admin-s-\${m.id}">
                 <option value="scheduled" \${m.status === 'scheduled' ? 'selected' : ''}>Sch</option>
                 <option value="finished" \${m.status === 'finished' ? 'selected' : ''}>Fin</option>
                 <option value="live" \${m.status === 'live' ? 'selected' : ''}>Live</option>
               </select>
               
-              <button class="btn-save-match" onclick="saveManualMatchScore('\\\\${m.id}')">Save</button>
+              <button class="btn-save-match" onclick="saveManualMatchScore('\${m.id}')">Save</button>
             </div>
           </div>
         \`;
       });
       
       if (filtered.length > 50) {
-        html += \`<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.3); padding-top:8px;">Showing first 50 results (Total: \\\${filtered.length})</div>\`;
+        html += \`<div style="text-align:center; font-size:10px; color:rgba(255,255,255,0.3); padding-top:8px;">Showing first 50 results (Total: \${filtered.length})</div>\`;
       }
       
       container.innerHTML = html;

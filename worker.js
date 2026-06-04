@@ -1128,6 +1128,173 @@ function getSummaryHTML() {
       text-align: center;
       padding: 40px 0;
     }
+    
+    /* Bracket styles */
+    .bracket-viewport-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background-color: #030806;
+      cursor: grab;
+    }
+    .bracket-viewport-container:active {
+      cursor: grabbing;
+    }
+    .bracket-draggable-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      width: 2800px;
+      height: 1300px;
+    }
+    .bracket-connections-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .bracket-columns-container {
+      display: flex;
+      gap: 75px;
+      padding: 50px;
+      position: relative;
+      width: max-content;
+      z-index: 2;
+    }
+    .bracket-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      height: 1200px;
+      width: 220px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .bracket-column.center-column {
+      justify-content: center;
+      gap: 120px;
+    }
+    .bracket-match-card {
+      background: var(--color-card-bg);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      width: 100%;
+      user-select: none;
+    }
+    .bracket-match-card.finished {
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      background: linear-gradient(180deg, var(--color-card-bg) 0%, rgba(16, 185, 129, 0.02) 100%);
+    }
+    .bracket-match-card.live-state {
+      border: 1.5px solid var(--color-emerald) !important;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3) !important;
+    }
+    .bracket-match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .bracket-match-team {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 22px;
+      font-size: 11px;
+    }
+    .bracket-match-team.winner {
+      font-weight: 700;
+      color: #fff;
+    }
+    .bracket-match-team.winner .bracket-team-text {
+      color: var(--color-gold-light);
+    }
+    .bracket-match-team.loser {
+      color: rgba(255,255,255,0.4);
+    }
+    .bracket-team-name-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex-grow: 1;
+    }
+    .bracket-flag {
+      width: 18px;
+      height: 12px;
+      object-fit: cover;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+    .bracket-team-text {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .bracket-score {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      width: 20px;
+      text-align: right;
+    }
+    .bracket-controls-overlay {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bracket-controls-overlay button {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .bracket-controls-overlay button:hover {
+      background: var(--color-emerald);
+      border-color: var(--color-emerald-light);
+    }
+    .bracket-connection-path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 2px;
+      transition: stroke 0.3s, stroke-width 0.3s;
+    }
+    .bracket-connection-path.active {
+      stroke: rgba(16, 185, 129, 0.3);
+      stroke-width: 2px;
+    }
+    .bracket-connection-path.highlight-winner {
+      stroke: var(--color-emerald);
+      stroke-width: 2.5px;
+      filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.6));
+    }
   </style>
 </head>
 <body>
@@ -1148,6 +1315,9 @@ function getSummaryHTML() {
         </button>
         <button class="tab-btn" onclick="switchTab('fixtures')">
           <i class="fa-solid fa-calendar-days"></i> Fixtures
+        </button>
+        <button class="tab-btn" onclick="switchTab('bracket')">
+          <i class="fa-solid fa-sitemap"></i> Bracket
         </button>
         <button class="tab-btn" onclick="switchTab('draft')">
           <i class="fa-solid fa-users"></i> Draft Board
@@ -1188,6 +1358,23 @@ function getSummaryHTML() {
 
       <div id="fixtures-content" class="matches-grid">
         <!-- Rendered matches -->
+      </div>
+    </section>
+
+    <!-- 1.5. BRACKET TAB -->
+    <section id="tab-bracket" class="tab-content" style="padding: 0; height: calc(100vh - 180px); min-height: 500px; position: relative;">
+      <div class="bracket-controls-overlay">
+        <button onclick="zoomBracket(1.15)" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+        <button onclick="zoomBracket(0.85)" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+        <button onclick="resetBracket()" title="Recenter Bracket"><i class="fa-solid fa-crosshairs"></i></button>
+      </div>
+      <div id="bracket-viewport" class="bracket-viewport-container">
+        <div id="bracket-content" class="bracket-draggable-content">
+          <svg id="bracket-svg" class="bracket-connections-svg"></svg>
+          <div id="bracket-tree-columns" class="bracket-columns-container">
+            <!-- 9 columns generated here dynamically -->
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1282,6 +1469,7 @@ function getSummaryHTML() {
         renderFixtures();
         renderDraftBoard();
         updatePlayerDropdown();
+        renderBracket();
         
         if (globalState.lastScoresFetch) {
           const dt = new Date(globalState.lastScoresFetch);
@@ -1301,6 +1489,12 @@ function getSummaryHTML() {
       
       const targetContent = document.getElementById('tab-' + tabId);
       if (targetContent) targetContent.classList.add('active');
+      
+      if (tabId === 'bracket') {
+        // Initialize layout events & connections centering
+        initBracketEvents();
+        setTimeout(resetBracket, 50);
+      }
       
       // Auto unlock check if opening admin tab
       if (tabId === 'admin') {
@@ -1657,6 +1851,379 @@ function getSummaryHTML() {
       });
       html += '</div>';
       container.innerHTML = html;
+    }
+
+    // --- INTERACTIVE BRACKET LOGIC ---
+    let bracketPanX = 30;
+    let bracketPanY = 30;
+    let bracketZoom = 0.65;
+    let isBracketDragging = false;
+    let bracketDragStartX = 0;
+    let bracketDragStartY = 0;
+    let isBracketInitialized = false;
+
+    function resolveTeamPlaceholder(teamName) {
+      if (!teamName) return { name: 'TBD', owner: '', isPlaceholder: true };
+      
+      // Match Winner placeholder (e.g. W73)
+      let match = teamName.match(/^W(\d+)$/);
+      if (match) {
+        const matchNum = parseInt(match[1]);
+        const refMatch = globalState.matches ? globalState.matches[matchNum - 1] : null;
+        if (refMatch && refMatch.status === 'finished') {
+          const outcome = getMatchWinnerLoser(refMatch);
+          return resolveTeamPlaceholder(outcome.winner);
+        }
+        return { name: \`Winner Match \${matchNum}\`, owner: '', isPlaceholder: true };
+      }
+      
+      // Match Loser placeholder (e.g. L101)
+      match = teamName.match(/^L(\d+)$/);
+      if (match) {
+        const matchNum = parseInt(match[1]);
+        const refMatch = globalState.matches ? globalState.matches[matchNum - 1] : null;
+        if (refMatch && refMatch.status === 'finished') {
+          const outcome = getMatchWinnerLoser(refMatch);
+          return resolveTeamPlaceholder(outcome.loser);
+        }
+        return { name: \`Loser Match \${matchNum}\`, owner: '', isPlaceholder: true };
+      }
+      
+      // Regular country name - find draft owner
+      const draftOwner = globalState.draftResults 
+        ? globalState.draftResults.find(r => r.team.name === teamName)?.player 
+        : '';
+        
+      return { name: teamName, owner: draftOwner || '', isPlaceholder: false };
+    }
+
+    function renderBracket() {
+      const container = document.getElementById('bracket-tree-columns');
+      if (!container) return; // Tab not active or loaded yet
+      
+      if (!globalState || !globalState.matches || globalState.matches.length === 0) {
+        container.innerHTML = '<div class="empty-message">No matches loaded. Use the Admin panel to sync fixtures!</div>';
+        return;
+      }
+
+      // Column mapping: 1-based match index numbers in World Cup 2026 schedule
+      const colsDef = [
+        { label: 'Round of 32', matches: [73, 75, 74, 77, 81, 82, 83, 84], side: 'left' },
+        { label: 'Round of 16', matches: [90, 89, 94, 93], side: 'left' },
+        { label: 'Quarter-finals', matches: [97, 98], side: 'left' },
+        { label: 'Semi-finals', matches: [101], side: 'left' },
+        { label: 'The Final', matches: [104, 103], side: 'center' },
+        { label: 'Semi-finals', matches: [102], side: 'right' },
+        { label: 'Quarter-finals', matches: [99, 100], side: 'right' },
+        { label: 'Round of 16', matches: [91, 92, 95, 96], side: 'right' },
+        { label: 'Round of 32', matches: [76, 78, 79, 80, 86, 88, 85, 87], side: 'right' }
+      ];
+
+      let colsHtml = '';
+      colsDef.forEach((col, colIdx) => {
+        const isCenter = col.side === 'center';
+        const colClass = isCenter ? 'bracket-column center-column' : 'bracket-column';
+        
+        colsHtml += \`<div class="\${colClass}" data-col="\${colIdx}">\`;
+        
+        col.matches.forEach(matchNum => {
+          const matchIndex = matchNum - 1;
+          const m = globalState.matches[matchIndex];
+          if (!m) return;
+          
+          const homeRes = resolveTeamPlaceholder(m.homeTeam);
+          const awayRes = resolveTeamPlaceholder(m.awayTeam);
+          
+          const homeWinner = m.status === 'finished' && m.homeScore > m.awayScore;
+          const awayWinner = m.status === 'finished' && m.awayScore > m.homeScore;
+          
+          const homeFlagUrl = homeRes.isPlaceholder ? '' : \`https://flagcdn.com/w40/\${globalState.draftResults.find(r => r.team.name === homeRes.name)?.team.code || getStaticTeamCode(homeRes.name)}.png\`;
+          const awayFlagUrl = awayRes.isPlaceholder ? '' : \`https://flagcdn.com/w40/\${globalState.draftResults.find(r => r.team.name === awayRes.name)?.team.code || getStaticTeamCode(awayRes.name)}.png\`;
+          
+          const isLive = m.status === 'live';
+          const isFinished = m.status === 'finished';
+          let cardClass = 'bracket-match-card';
+          if (isLive) cardClass += ' live-state';
+          if (isFinished) cardClass += ' finished';
+          
+          const stageLabel = matchNum === 104 ? '🏆 The Final' : matchNum === 103 ? '🥉 3rd Place' : \`\${m.round} (M\${matchNum})\`;
+          
+          colsHtml += \`
+            <div class="\${cardClass}" id="bcard-match_\${matchIndex}">
+              <div class="bracket-match-header">
+                <span>\${stageLabel}</span>
+                \${isLive ? '<span style="color:var(--color-emerald); font-weight:800; animation: pulseLiveBorder 1s infinite alternate;">LIVE</span>' : ''}
+              </div>
+              
+              <!-- Home -->
+              <div class="bracket-match-team \${homeWinner ? 'winner' : isFinished ? 'loser' : ''}">
+                <div class="bracket-team-name-group">
+                  \${homeFlagUrl ? \`<img src="\${homeFlagUrl}" class="bracket-flag" onerror="this.style.display='none'" />\` : '<div class="bracket-flag" style="background:rgba(255,255,255,0.05); border-radius:1px;"></div>'}
+                  <div style="display:flex; flex-direction:column; min-width:0;">
+                    <span class="bracket-team-text" title="\${homeRes.name}">\${homeRes.name}</span>
+                    \${homeRes.owner ? \`<span style="font-size:7px; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:600;">\${homeRes.owner}</span>\` : ''}
+                  </div>
+                </div>
+                <span class="bracket-score">\${m.homeScore !== null ? m.homeScore : ''}</span>
+              </div>
+              
+              <!-- Away -->
+              <div class="bracket-match-team \${awayWinner ? 'winner' : isFinished ? 'loser' : ''}">
+                <div class="bracket-team-name-group">
+                  \${awayFlagUrl ? \`<img src="\${awayFlagUrl}" class="bracket-flag" onerror="this.style.display='none'" />\` : '<div class="bracket-flag" style="background:rgba(255,255,255,0.05); border-radius:1px;"></div>'}
+                  <div style="display:flex; flex-direction:column; min-width:0;">
+                    <span class="bracket-team-text" title="\${awayRes.name}">\${awayRes.name}</span>
+                    \${awayRes.owner ? \`<span style="font-size:7px; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:600;">\${awayRes.owner}</span>\` : ''}
+                  </div>
+                </div>
+                <span class="bracket-score">\${m.awayScore !== null ? m.awayScore : ''}</span>
+              </div>
+            </div>
+          \`;
+        });
+        
+        colsHtml += '</div>';
+      });
+      
+      container.innerHTML = colsHtml;
+      
+      if (document.getElementById('tab-bracket').classList.contains('active')) {
+        setTimeout(drawBracketConnections, 50);
+      }
+    }
+
+    function initBracketEvents() {
+      if (isBracketInitialized) return;
+      const viewport = document.getElementById('bracket-viewport');
+      const content = document.getElementById('bracket-content');
+      if (!viewport || !content) return;
+
+      // Mouse drag
+      viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.bracket-match-card') || e.target.closest('button')) return;
+        isBracketDragging = true;
+        viewport.style.cursor = 'grabbing';
+        bracketDragStartX = e.clientX - bracketPanX;
+        bracketDragStartY = e.clientY - bracketPanY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isBracketDragging) return;
+        bracketPanX = e.clientX - bracketDragStartX;
+        bracketPanY = e.clientY - bracketDragStartY;
+        updateBracketTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isBracketDragging) {
+          isBracketDragging = false;
+          viewport.style.cursor = 'grab';
+        }
+      });
+
+      // Zoom on wheel at pointer
+      viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = 1.15;
+        const oldZoom = bracketZoom;
+        
+        if (e.deltaY < 0) {
+          bracketZoom = Math.min(1.8, bracketZoom * zoomFactor);
+        } else {
+          bracketZoom = Math.max(0.25, bracketZoom / zoomFactor);
+        }
+        
+        const rect = viewport.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        bracketPanX = mouseX - (mouseX - bracketPanX) * (bracketZoom / oldZoom);
+        bracketPanY = mouseY - (mouseY - bracketPanY) * (bracketZoom / oldZoom);
+        
+        updateBracketTransform();
+        drawBracketConnections();
+      });
+
+      // Mobile touch panning
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.bracket-match-card') || e.target.closest('button')) return;
+        if (e.touches.length === 1) {
+          isBracketDragging = true;
+          bracketDragStartX = e.touches[0].clientX - bracketPanX;
+          bracketDragStartY = e.touches[0].clientY - bracketPanY;
+        }
+      });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (!isBracketDragging) return;
+        if (e.touches.length === 1) {
+          bracketPanX = e.touches[0].clientX - bracketDragStartX;
+          bracketPanY = e.touches[0].clientY - bracketPanY;
+          updateBracketTransform();
+        }
+      });
+
+      viewport.addEventListener('touchend', () => {
+        isBracketDragging = false;
+      });
+
+      isBracketInitialized = true;
+      updateBracketTransform();
+      window.addEventListener('resize', () => {
+        if (document.getElementById('tab-bracket').classList.contains('active')) {
+          drawBracketConnections();
+        }
+      });
+    }
+
+    function updateBracketTransform() {
+      const content = document.getElementById('bracket-content');
+      if (content) {
+        content.style.transform = \`translate(\${bracketPanX}px, \${bracketPanY}px) scale(\${bracketZoom})\`;
+      }
+    }
+
+    function zoomBracket(factor) {
+      const viewport = document.getElementById('bracket-viewport');
+      if (!viewport) return;
+      const oldZoom = bracketZoom;
+      bracketZoom = Math.max(0.25, Math.min(1.8, bracketZoom * factor));
+      
+      const rect = viewport.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      bracketPanX = centerX - (centerX - bracketPanX) * (bracketZoom / oldZoom);
+      bracketPanY = centerY - (centerY - bracketPanY) * (bracketZoom / oldZoom);
+      
+      updateBracketTransform();
+      drawBracketConnections();
+    }
+
+    function resetBracket() {
+      const viewport = document.getElementById('bracket-viewport');
+      if (!viewport) return;
+      const rect = viewport.getBoundingClientRect();
+      
+      // Centered initial view
+      bracketZoom = 0.6;
+      bracketPanX = (rect.width - 2620 * bracketZoom) / 2;
+      bracketPanY = (rect.height - 1200 * bracketZoom) / 2;
+      
+      updateBracketTransform();
+      setTimeout(drawBracketConnections, 50);
+    }
+
+    function drawBracketConnections() {
+      const svg = document.getElementById('bracket-svg');
+      const content = document.getElementById('bracket-content');
+      if (!svg || !content || !globalState || !globalState.matches) return;
+      
+      svg.innerHTML = '';
+      const canvasRect = content.getBoundingClientRect();
+      
+      const BRACKET_CONNECTIONS = [
+        // Left Side
+        { parentId: 'match_72', childId: 'match_89', side: 'left' },
+        { parentId: 'match_74', childId: 'match_89', side: 'left' },
+        { parentId: 'match_73', childId: 'match_88', side: 'left' },
+        { parentId: 'match_76', childId: 'match_88', side: 'left' },
+        { parentId: 'match_80', childId: 'match_93', side: 'left' },
+        { parentId: 'match_81', childId: 'match_93', side: 'left' },
+        { parentId: 'match_82', childId: 'match_92', side: 'left' },
+        { parentId: 'match_83', childId: 'match_92', side: 'left' },
+        
+        { parentId: 'match_89', childId: 'match_96', side: 'left' },
+        { parentId: 'match_88', childId: 'match_96', side: 'left' },
+        { parentId: 'match_93', childId: 'match_97', side: 'left' },
+        { parentId: 'match_92', childId: 'match_97', side: 'left' },
+        
+        { parentId: 'match_96', childId: 'match_100', side: 'left' },
+        { parentId: 'match_97', childId: 'match_100', side: 'left' },
+        
+        { parentId: 'match_100', childId: 'match_103', side: 'left' },
+        
+        // Right Side
+        { parentId: 'match_75', childId: 'match_90', side: 'right' },
+        { parentId: 'match_77', childId: 'match_90', side: 'right' },
+        { parentId: 'match_78', childId: 'match_91', side: 'right' },
+        { parentId: 'match_79', childId: 'match_91', side: 'right' },
+        { parentId: 'match_85', childId: 'match_94', side: 'right' },
+        { parentId: 'match_87', childId: 'match_94', side: 'right' },
+        { parentId: 'match_84', childId: 'match_95', side: 'right' },
+        { parentId: 'match_86', childId: 'match_95', side: 'right' },
+        
+        { parentId: 'match_90', childId: 'match_98', side: 'right' },
+        { parentId: 'match_91', childId: 'match_98', side: 'right' },
+        { parentId: 'match_94', childId: 'match_99', side: 'right' },
+        { parentId: 'match_95', childId: 'match_99', side: 'right' },
+        
+        { parentId: 'match_98', childId: 'match_101', side: 'right' },
+        { parentId: 'match_99', childId: 'match_101', side: 'right' },
+        
+        { parentId: 'match_101', childId: 'match_103', side: 'right' }
+      ];
+      
+      BRACKET_CONNECTIONS.forEach(conn => {
+        const parentEl = document.getElementById('bcard-' + conn.parentId);
+        const childEl = document.getElementById('bcard-' + conn.childId);
+        if (!parentEl || !childEl) return;
+        
+        const parentRect = parentEl.getBoundingClientRect();
+        const childRect = childEl.getBoundingClientRect();
+        
+        const parentMidY = parentRect.top + parentRect.height / 2;
+        const childMidY = childRect.top + childRect.height / 2;
+        
+        let startX, startY, endX, endY;
+        if (conn.side === 'left') {
+          startX = parentRect.right - canvasRect.left;
+          startY = parentMidY - canvasRect.top;
+          endX = childRect.left - canvasRect.left;
+          endY = childMidY - canvasRect.top;
+        } else {
+          startX = parentRect.left - canvasRect.left;
+          startY = parentMidY - canvasRect.top;
+          endX = childRect.right - canvasRect.left;
+          endY = childMidY - canvasRect.top;
+        }
+        
+        startX /= bracketZoom;
+        startY /= bracketZoom;
+        endX /= bracketZoom;
+        endY /= bracketZoom;
+        
+        const parentIndex = parseInt(conn.parentId.split('_')[1]);
+        const parentMatch = globalState.matches[parentIndex];
+        let pathClass = 'bracket-connection-path';
+        
+        if (parentMatch && parentMatch.status === 'finished') {
+          const outcome = getMatchWinnerLoser(parentMatch);
+          const childIndex = parseInt(conn.childId.split('_')[1]);
+          const childMatch = globalState.matches[childIndex];
+          
+          if (childMatch && outcome.winner) {
+            const homeResolved = resolveTeamPlaceholder(childMatch.homeTeam).name;
+            const awayResolved = resolveTeamPlaceholder(childMatch.awayTeam).name;
+            const winnerResolved = resolveTeamPlaceholder(outcome.winner).name;
+            if (winnerResolved && (homeResolved === winnerResolved || awayResolved === winnerResolved)) {
+              pathClass += ' highlight-winner';
+            } else {
+              pathClass += ' active';
+            }
+          } else {
+            pathClass += ' active';
+          }
+        }
+        
+        const midX = startX + (endX - startX) / 2;
+        const d = \`M \${startX} \${startY} H \${midX} V \${endY} H \${endX}\`;
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class', pathClass);
+        svg.appendChild(path);
+      });
     }
 
     // Admin Console Lock / Unlock

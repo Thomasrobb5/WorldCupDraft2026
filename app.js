@@ -19,7 +19,19 @@ let state = {
   isMuted: false,
   spinDuration: 6.0, // default spin duration in seconds
   spinSpeedFactor: 1.0, // default speed multiplier
-  workerUrl: HARDCODED_WORKER_URL // Hardcoded Cloudflare Worker Sync URL
+  workerUrl: HARDCODED_WORKER_URL, // Hardcoded Cloudflare Worker Sync URL
+  matches: [],
+  scoringSettings: {
+    groupWin: 3,
+    groupDraw: 1,
+    advanceR32: 2,
+    advanceR16: 4,
+    advanceQF: 6,
+    advanceSF: 8,
+    advanceFinal: 10,
+    winTournament: 12
+  },
+  lastScoresFetch: 0
 };
 
 // Web Audio API Synthesizer Fallback (for instant sound cues)
@@ -449,7 +461,19 @@ async function fetchFromCloud(forceLoad = false) {
           isMuted: cloudState.isMuted || false,
           spinDuration: cloudState.spinDuration || state.spinDuration || 6.0,
           spinSpeedFactor: cloudState.spinSpeedFactor || state.spinSpeedFactor || 1.0,
-          workerUrl: url
+          workerUrl: url,
+          matches: cloudState.matches || [],
+          scoringSettings: cloudState.scoringSettings || state.scoringSettings || {
+            groupWin: 3,
+            groupDraw: 1,
+            advanceR32: 2,
+            advanceR16: 4,
+            advanceQF: 6,
+            advanceSF: 8,
+            advanceFinal: 10,
+            winTournament: 12
+          },
+          lastScoresFetch: cloudState.lastScoresFetch || 0
         };
         saveState(false); // save locally without triggering another push to prevent loop
         initApp();
@@ -499,18 +523,36 @@ function loadState() {
       if (!state.gameState) state.gameState = 'SELECTING_PLAYER';
       if (state.spinDuration === undefined) state.spinDuration = 6.0;
       if (state.spinSpeedFactor === undefined) state.spinSpeedFactor = 1.0;
+      if (!state.matches) state.matches = [];
+      if (!state.scoringSettings) {
+        state.scoringSettings = {
+          groupWin: 3,
+          groupDraw: 1,
+          advanceR32: 2,
+          advanceR16: 4,
+          advanceQF: 6,
+          advanceSF: 8,
+          advanceFinal: 10,
+          winTournament: 12
+        };
+      }
+      if (state.lastScoresFetch === undefined) state.lastScoresFetch = 0;
       state.workerUrl = HARDCODED_WORKER_URL; // Enforce hardcoded endpoint
     } catch (e) {
       console.error("Failed to parse local storage state. Reverting to default.", e);
       state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
       state.draftResults = [];
       state.gameState = 'SELECTING_PLAYER';
+      state.matches = [];
+      state.lastScoresFetch = 0;
       state.workerUrl = HARDCODED_WORKER_URL; // Enforce hardcoded endpoint
     }
   } else {
     state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
     state.draftResults = [];
     state.gameState = 'SELECTING_PLAYER';
+    state.matches = [];
+    state.lastScoresFetch = 0;
     state.workerUrl = HARDCODED_WORKER_URL; // Enforce hardcoded endpoint
   }
   
@@ -518,7 +560,12 @@ function loadState() {
   
   // Try to sync with Cloud Worker on startup (force pull cloud state)
   setTimeout(() => {
-    fetchFromCloud(true);
+    fetchFromCloud(true).then(() => {
+      // If after pulling cloud, matches are still empty, fetch them from GitHub
+      if (!state.matches || state.matches.length === 0) {
+        initializeMatchesFromGitHub();
+      }
+    });
   }, 100);
 }
 
@@ -526,6 +573,61 @@ function saveState(pushCloud = true) {
   localStorage.setItem('wc_draft_state', JSON.stringify(state));
   if (pushCloud) {
     pushToCloud();
+  }
+}
+
+async function initializeMatchesFromGitHub() {
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json');
+    if (!res.ok) throw new Error('Github openfootball data offline');
+    const openFootballData = await res.json();
+    
+    state.matches = [];
+    const jsonMatches = openFootballData.matches || [];
+    
+    const TEAM_NAME_MAPPINGS = {
+      "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+      "Curaçao": "Curacao",
+      "Czech Republic": "Czechia",
+      "Turkey": "Turkiye"
+    };
+
+    const mapJsonTeam = (name) => TEAM_NAME_MAPPINGS[name] || name;
+
+    jsonMatches.forEach((m, index) => {
+      let status = 'scheduled';
+      let homeScore = null;
+      let awayScore = null;
+      let scoreObj = null;
+
+      if (m.score) {
+        status = 'finished';
+        homeScore = m.score.ft ? m.score.ft[0] : null;
+        awayScore = m.score.ft ? m.score.ft[1] : null;
+        scoreObj = m.score;
+      }
+
+      state.matches.push({
+        id: `match_${index}`,
+        homeTeam: mapJsonTeam(m.team1),
+        awayTeam: mapJsonTeam(m.team2),
+        homeScore: homeScore,
+        awayScore: awayScore,
+        score: scoreObj,
+        status: status,
+        date: m.date,
+        time: m.time,
+        group: m.group || '',
+        round: m.round,
+        ground: m.ground || '',
+        isManual: false
+      });
+    });
+    
+    state.lastScoresFetch = Date.now();
+    saveState();
+  } catch (err) {
+    console.error("Failed to pre-populate schedule matches:", err);
   }
 }
 
@@ -1060,8 +1162,63 @@ window.addEventListener('DOMContentLoaded', () => {
       state.gameState = 'SELECTING_PLAYER';
       state.selectedPlayer = null;
       state.selectedTeam = null;
+      state.matches = [];
+      state.lastScoresFetch = 0;
       saveState();
+      initializeMatchesFromGitHub();
       initApp();
+    }
+  });
+  
+  // Demo Draft handling
+  document.getElementById('btn-demo-draft').addEventListener('click', () => {
+    if (confirm("Simulate draft results? This will randomly assign all 48 teams to current players.")) {
+      if (!state.players || state.players.length === 0) {
+        const defaultPlayersList = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS : ["Ross", "Brad", "Tav", "Saunders", "Matt", "Albury", "Mook", "Boob"];
+        state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
+      }
+      
+      const defaultTeams = (typeof INITIAL_TEAMS !== 'undefined') ? INITIAL_TEAMS : [];
+      if (defaultTeams.length === 0) {
+        alert("Error: INITIAL_TEAMS not defined");
+        return;
+      }
+      
+      // Shuffle teams
+      const shuffledTeams = [...defaultTeams].sort(() => Math.random() - 0.5);
+      
+      state.draftResults = [];
+      
+      // Distribute teams equally based on maxDrafts limits
+      let teamIndex = 0;
+      for (let p of state.players) {
+        for (let j = 0; j < p.maxDrafts; j++) {
+          if (teamIndex >= shuffledTeams.length) break;
+          
+          state.draftResults.push({
+            id: `draft_${Date.now()}_${teamIndex}`,
+            player: p.name,
+            team: shuffledTeams[teamIndex],
+            timestamp: Date.now() - (shuffledTeams.length - teamIndex) * 60000
+          });
+          teamIndex++;
+        }
+      }
+      
+      state.gameState = 'SELECTING_PLAYER';
+      state.selectedPlayer = null;
+      state.selectedTeam = null;
+      
+      saveState();
+      
+      // Fetch or verify matches schedule if empty
+      if (!state.matches || state.matches.length === 0) {
+        initializeMatchesFromGitHub().then(() => initApp());
+      } else {
+        initApp();
+      }
+      
+      alert("Draft results simulated and synced successfully!");
     }
   });
   

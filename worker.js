@@ -1305,6 +1305,74 @@ function getSummaryHTML() {
       stroke-width: 2.5px;
       filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.6));
     }
+
+    /* Countdown Banner styles */
+    .countdown-banner {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(4, 26, 15, 0.4) 100%);
+      border: 1.5px solid var(--color-gold);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(212, 175, 55, 0.1);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      animation: pulseGlow 3s infinite alternate;
+    }
+    
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 4px 20px rgba(212, 175, 55, 0.05); }
+      100% { box-shadow: 0 8px 32px rgba(212, 175, 55, 0.15); }
+    }
+    
+    .countdown-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .countdown-icon {
+      color: var(--color-gold);
+      font-size: 28px;
+      filter: drop-shadow(0 0 8px var(--color-gold-glow));
+    }
+    
+    .countdown-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .countdown-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-gold-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .countdown-time {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #ffffff;
+    }
+
+    @media (max-width: 768px) {
+      .countdown-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .countdown-schedule-label {
+        text-align: left !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1340,6 +1408,22 @@ function getSummaryHTML() {
   </header>
 
   <main>
+    <!-- Countdown Banner -->
+    <div id="draft-countdown-banner" class="countdown-banner" style="display: none;">
+      <div class="countdown-content">
+        <div class="countdown-icon">
+          <i class="fa-solid fa-clock fa-spin" style="animation-duration: 4s;"></i>
+        </div>
+        <div class="countdown-details">
+          <h3 class="countdown-title">Live Draft Commences In</h3>
+          <p class="countdown-time" id="countdown-timer-display">00d 00h 00m 00s</p>
+        </div>
+      </div>
+      <div class="countdown-schedule-label" style="font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; font-weight: 600;">
+        Starts June 10th at 9:00 PM UK Time
+      </div>
+    </div>
+
     <!-- 1. STANDINGS TAB -->
     <section id="tab-standings" class="tab-content active">
       <div id="standings-content">
@@ -1468,6 +1552,34 @@ function getSummaryHTML() {
     let globalState = null;
     let currentMatchFilter = 'all';
     let currentPlayerFilter = 'all';
+
+    // Countdown Timer logic
+    const draftStartTime = new Date(Date.UTC(2026, 5, 10, 20, 0, 0)); // June 10, 2026 at 9:00 PM UK Time (20:00 UTC)
+    
+    function updateCountdown() {
+      const now = new Date();
+      const timeLeft = draftStartTime - now;
+      const banner = document.getElementById('draft-countdown-banner');
+      
+      if (timeLeft <= 0) {
+        if (banner) banner.style.display = 'none';
+        return;
+      }
+      
+      if (banner) banner.style.display = 'flex';
+      
+      const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      
+      const displayString = days + 'd ' + hours.toString().padStart(2, '0') + 'h ' + minutes.toString().padStart(2, '0') + 'm ' + seconds.toString().padStart(2, '0') + 's';
+      const displayEl = document.getElementById('countdown-timer-display');
+      if (displayEl) displayEl.innerText = displayString;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
 
     async function loadData() {
       try {

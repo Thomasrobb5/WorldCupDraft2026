@@ -1,8 +1,8 @@
 // 2026 World Cup Draft App State Management & Physics Coordinator
 
-// Compute default max drafts per player dynamically (e.g. 48 / 8 = 6)
+// Compute default max drafts per player dynamically (e.g. 48 / 12 = 4)
 const getDefaultMaxDrafts = () => {
-  const pCount = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS.length : 8;
+  const pCount = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS.length : 12;
   const tCount = (typeof INITIAL_TEAMS !== 'undefined') ? INITIAL_TEAMS.length : 48;
   return Math.ceil(tCount / pCount);
 };
@@ -19,6 +19,8 @@ let state = {
   isMuted: false,
   spinDuration: 6.0, // default spin duration in seconds
   spinSpeedFactor: 1.0, // default speed multiplier
+  spinSpeedFactorPlayer: 1.0, // default player speed multiplier
+  spinSpeedFactorTeam: 1.0, // default team speed multiplier
   workerUrl: HARDCODED_WORKER_URL, // Hardcoded Cloudflare Worker Sync URL
   matches: [],
   scoringSettings: {
@@ -186,7 +188,7 @@ class Wheel {
     window.addEventListener('resize', () => this.draw());
   }
   
-  spin() {
+  spin(speedFactor = 1.0) {
     if (this.isSpinning) return;
     const items = this.getItems();
     if (items.length === 0) return;
@@ -196,7 +198,7 @@ class Wheel {
     
     // Unpredictable initial velocity scaled by custom spin speed factor
     const baseVelocity = Math.random() * 0.2 + 0.38;
-    this.angularVelocity = baseVelocity * state.spinSpeedFactor;
+    this.angularVelocity = baseVelocity * speedFactor;
     
     // Compute deceleration friction dynamically so the spin lasts exactly state.spinDuration seconds (assuming 60 FPS)
     // Formula: friction = exp( ln(0.001 / V_initial) / (60 * duration) )
@@ -461,6 +463,8 @@ async function fetchFromCloud(forceLoad = false) {
           isMuted: cloudState.isMuted || false,
           spinDuration: cloudState.spinDuration || state.spinDuration || 6.0,
           spinSpeedFactor: cloudState.spinSpeedFactor || state.spinSpeedFactor || 1.0,
+          spinSpeedFactorPlayer: cloudState.spinSpeedFactorPlayer || cloudState.spinSpeedFactor || state.spinSpeedFactorPlayer || 1.0,
+          spinSpeedFactorTeam: cloudState.spinSpeedFactorTeam || cloudState.spinSpeedFactor || state.spinSpeedFactorTeam || 1.0,
           workerUrl: url,
           matches: cloudState.matches || [],
           scoringSettings: cloudState.scoringSettings || state.scoringSettings || {
@@ -510,7 +514,7 @@ function updateSyncStatusUI(status) {
 // Initial Sync & LocalStorage handling
 function loadState() {
   const saved = localStorage.getItem('wc_draft_state');
-  const defaultPlayersList = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS : ["Ross", "Brad", "Tav", "Saunders", "Matt", "Albury", "Mook", "Boob"];
+  const defaultPlayersList = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS : ["Saunders", "Allbury", "Brad", "Matty", "Tav", "Ross", "Gooch", "Mook", "Steve", "Rick", "Chris", "Lee"];
   
   if (saved) {
     try {
@@ -523,6 +527,8 @@ function loadState() {
       if (!state.gameState) state.gameState = 'SELECTING_PLAYER';
       if (state.spinDuration === undefined) state.spinDuration = 6.0;
       if (state.spinSpeedFactor === undefined) state.spinSpeedFactor = 1.0;
+      if (state.spinSpeedFactorPlayer === undefined) state.spinSpeedFactorPlayer = state.spinSpeedFactor !== undefined ? state.spinSpeedFactor : 1.0;
+      if (state.spinSpeedFactorTeam === undefined) state.spinSpeedFactorTeam = state.spinSpeedFactor !== undefined ? state.spinSpeedFactor : 1.0;
       if (!state.matches) state.matches = [];
       if (!state.scoringSettings) {
         state.scoringSettings = {
@@ -651,9 +657,32 @@ function initApp() {
   updateDraftProgress();
   updateTicker();
   updateUIForState();
+  updateSettingsUI();
   
   playerWheel.draw();
   teamWheel.draw();
+}
+
+function updateSettingsUI() {
+  const sliderDuration = document.getElementById('spin-duration');
+  const sliderSpeedPlayer = document.getElementById('spin-speed-player');
+  const sliderSpeedTeam = document.getElementById('spin-speed-team');
+  const valDuration = document.getElementById('duration-val');
+  const valSpeedPlayer = document.getElementById('speed-val-player');
+  const valSpeedTeam = document.getElementById('speed-val-team');
+  
+  if (sliderDuration && valDuration) {
+    sliderDuration.value = state.spinDuration;
+    valDuration.innerText = state.spinDuration.toFixed(1) + 's';
+  }
+  if (sliderSpeedPlayer && valSpeedPlayer) {
+    sliderSpeedPlayer.value = state.spinSpeedFactorPlayer;
+    valSpeedPlayer.innerText = state.spinSpeedFactorPlayer.toFixed(1) + 'x';
+  }
+  if (sliderSpeedTeam && valSpeedTeam) {
+    sliderSpeedTeam.value = state.spinSpeedFactorTeam;
+    valSpeedTeam.innerText = state.spinSpeedFactorTeam.toFixed(1) + 'x';
+  }
 }
 
 // Render dynamic players list with manual adjustments
@@ -1107,7 +1136,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     state.gameState = 'SPINNING_PLAYER';
     updateUIForState();
-    playerWheel.spin();
+    playerWheel.spin(state.spinSpeedFactorPlayer);
   });
   
   const btnSpinTeam = document.getElementById('btn-spin-team');
@@ -1118,7 +1147,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     state.gameState = 'SPINNING_TEAM';
     updateUIForState();
-    teamWheel.spin();
+    teamWheel.spin(state.spinSpeedFactorTeam);
   });
   
   // Canvas Click To Spin support
@@ -1156,7 +1185,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Reset Draft handling
   document.getElementById('btn-reset').addEventListener('click', () => {
     if (confirm("Reset the World Cup Draft? This clears all assignments!")) {
-      const defaultPlayersList = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS : ["Ross", "Brad", "Tav", "Saunders", "Matt", "Albury", "Mook", "Boob"];
+      const defaultPlayersList = (typeof INITIAL_PLAYERS !== 'undefined') ? INITIAL_PLAYERS : ["Saunders", "Allbury", "Brad", "Matty", "Tav", "Ross", "Gooch", "Mook", "Steve", "Rick", "Chris", "Lee"];
       state.players = defaultPlayersList.map(name => ({ name, maxDrafts: getDefaultMaxDrafts() }));
       state.draftResults = [];
       state.gameState = 'SELECTING_PLAYER';
@@ -1261,7 +1290,9 @@ window.addEventListener('DOMContentLoaded', () => {
             selectedTeam: imported.selectedTeam || null,
             isMuted: imported.isMuted || false,
             spinDuration: imported.spinDuration !== undefined ? imported.spinDuration : 6.0,
-            spinSpeedFactor: imported.spinSpeedFactor !== undefined ? imported.spinSpeedFactor : 1.0
+            spinSpeedFactor: imported.spinSpeedFactor !== undefined ? imported.spinSpeedFactor : 1.0,
+            spinSpeedFactorPlayer: imported.spinSpeedFactorPlayer !== undefined ? imported.spinSpeedFactorPlayer : (imported.spinSpeedFactor !== undefined ? imported.spinSpeedFactor : 1.0),
+            spinSpeedFactorTeam: imported.spinSpeedFactorTeam !== undefined ? imported.spinSpeedFactorTeam : (imported.spinSpeedFactor !== undefined ? imported.spinSpeedFactor : 1.0)
           };
           saveState();
           updateMuteStateUI();
@@ -1319,26 +1350,41 @@ window.addEventListener('DOMContentLoaded', () => {
   
   // Bind Spin Settings range sliders
   const sliderDuration = document.getElementById('spin-duration');
-  const sliderSpeed = document.getElementById('spin-speed');
+  const sliderSpeedPlayer = document.getElementById('spin-speed-player');
+  const sliderSpeedTeam = document.getElementById('spin-speed-team');
   const valDuration = document.getElementById('duration-val');
-  const valSpeed = document.getElementById('speed-val');
+  const valSpeedPlayer = document.getElementById('speed-val-player');
+  const valSpeedTeam = document.getElementById('speed-val-team');
   
-  if (sliderDuration && sliderSpeed) {
+  if (sliderDuration) {
     sliderDuration.value = state.spinDuration;
     valDuration.innerText = state.spinDuration.toFixed(1) + 's';
-    
-    sliderSpeed.value = state.spinSpeedFactor;
-    valSpeed.innerText = state.spinSpeedFactor.toFixed(1) + 'x';
     
     sliderDuration.addEventListener('input', (e) => {
       state.spinDuration = parseFloat(e.target.value);
       valDuration.innerText = state.spinDuration.toFixed(1) + 's';
       saveState();
     });
+  }
+  
+  if (sliderSpeedPlayer) {
+    sliderSpeedPlayer.value = state.spinSpeedFactorPlayer;
+    valSpeedPlayer.innerText = state.spinSpeedFactorPlayer.toFixed(1) + 'x';
     
-    sliderSpeed.addEventListener('input', (e) => {
-      state.spinSpeedFactor = parseFloat(e.target.value);
-      valSpeed.innerText = state.spinSpeedFactor.toFixed(1) + 'x';
+    sliderSpeedPlayer.addEventListener('input', (e) => {
+      state.spinSpeedFactorPlayer = parseFloat(e.target.value);
+      valSpeedPlayer.innerText = state.spinSpeedFactorPlayer.toFixed(1) + 'x';
+      saveState();
+    });
+  }
+  
+  if (sliderSpeedTeam) {
+    sliderSpeedTeam.value = state.spinSpeedFactorTeam;
+    valSpeedTeam.innerText = state.spinSpeedFactorTeam.toFixed(1) + 'x';
+    
+    sliderSpeedTeam.addEventListener('input', (e) => {
+      state.spinSpeedFactorTeam = parseFloat(e.target.value);
+      valSpeedTeam.innerText = state.spinSpeedFactorTeam.toFixed(1) + 'x';
       saveState();
     });
   }

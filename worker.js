@@ -13,14 +13,18 @@
 // Global in-memory state fallback (resets when worker restarts)
 let memoryState = {
   players: [
-    { name: "Ross", maxDrafts: 6 },
-    { name: "Brad", maxDrafts: 6 },
-    { name: "Tav", maxDrafts: 6 },
-    { name: "Saunders", maxDrafts: 6 },
-    { name: "Matt", maxDrafts: 6 },
-    { name: "Albury", maxDrafts: 6 },
-    { name: "Mook", maxDrafts: 6 },
-    { name: "Boob", maxDrafts: 6 }
+    { name: "Saunders", maxDrafts: 4 },
+    { name: "Allbury", maxDrafts: 4 },
+    { name: "Brad", maxDrafts: 4 },
+    { name: "Matty", maxDrafts: 4 },
+    { name: "Tav", maxDrafts: 4 },
+    { name: "Ross", maxDrafts: 4 },
+    { name: "Gooch", maxDrafts: 4 },
+    { name: "Mook", maxDrafts: 4 },
+    { name: "Steve", maxDrafts: 4 },
+    { name: "Rick", maxDrafts: 4 },
+    { name: "Chris", maxDrafts: 4 },
+    { name: "Lee", maxDrafts: 4 }
   ],
   draftResults: [],
   gameState: 'SELECTING_PLAYER',
@@ -29,6 +33,8 @@ let memoryState = {
   isMuted: false,
   spinDuration: 6.0,
   spinSpeedFactor: 1.0,
+  spinSpeedFactorPlayer: 1.0,
+  spinSpeedFactorTeam: 1.0,
   matches: [],
   scoringSettings: {
     groupWin: 3,
@@ -156,6 +162,8 @@ export default {
             state = JSON.parse(value);
             // Schema migration checks
             if (!state.matches) state.matches = [];
+            if (state.spinSpeedFactorPlayer === undefined) state.spinSpeedFactorPlayer = state.spinSpeedFactor || 1.0;
+            if (state.spinSpeedFactorTeam === undefined) state.spinSpeedFactorTeam = state.spinSpeedFactor || 1.0;
             if (!state.scoringSettings) {
               state.scoringSettings = {
                 groupWin: 3,
@@ -208,6 +216,8 @@ export default {
           state.isMuted = body.isMuted || false;
           state.spinDuration = body.spinDuration !== undefined ? body.spinDuration : 6.0;
           state.spinSpeedFactor = body.spinSpeedFactor !== undefined ? body.spinSpeedFactor : 1.0;
+          state.spinSpeedFactorPlayer = body.spinSpeedFactorPlayer !== undefined ? body.spinSpeedFactorPlayer : (body.spinSpeedFactor !== undefined ? body.spinSpeedFactor : 1.0);
+          state.spinSpeedFactorTeam = body.spinSpeedFactorTeam !== undefined ? body.spinSpeedFactorTeam : (body.spinSpeedFactor !== undefined ? body.spinSpeedFactor : 1.0);
           
           if (Array.isArray(body.matches)) state.matches = body.matches;
           if (body.scoringSettings) state.scoringSettings = body.scoringSettings;

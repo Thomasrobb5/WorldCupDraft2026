@@ -1,12 +1,16 @@
 const INITIAL_PLAYERS = [
-  "Ross",
-  "Brad",
-  "Tav",
   "Saunders",
-  "Matt",
-  "Albury",
+  "Allbury",
+  "Brad",
+  "Matty",
+  "Tav",
+  "Ross",
+  "Gooch",
   "Mook",
-  "Boob"
+  "Steve",
+  "Rick",
+  "Chris",
+  "Lee"
 ];
 
 const INITIAL_TEAMS = [
